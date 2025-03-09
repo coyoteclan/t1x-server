@@ -95,23 +95,16 @@ static const Com_EndRedirect_t Com_EndRedirect = (Com_EndRedirect_t)0x0806d8d0;
 
 //// Cvar
 typedef cvar_t* (*Cvar_Set_t)(const char *var_name, const char *value);
-static const Cvar_Set_t Cvar_Set = (Cvar_Set_t)0x0806f0b0;
+//static const Cvar_Set_t Cvar_Set = (Cvar_Set_t)0x8073100;
+static const Cvar_Set_t Cvar_Set = (Cvar_Set_t)0x8073100;
 
 typedef cvar_t* (*Cvar_Get_t)(const char *var_name, const char *var_value, unsigned short flags);
-static const Cvar_Get_t Cvar_Get = (Cvar_Get_t)0x0806ea34;
+//static const Cvar_Get_t Cvar_Get = (Cvar_Get_t)0x0806ea34;
+static const Cvar_Get_t Cvar_Get = (Cvar_Get_t)0x8072a7c;
 
 typedef cvar_t* (*Cvar_FindVar_t)(const char *var_name);
-static const Cvar_FindVar_t Cvar_FindVar = (Cvar_FindVar_t)0x0806e9b4;
-
-typedef char* (*Cvar_VariableString_t)(const char *cvarName);
-static const Cvar_VariableString_t Cvar_VariableString = (Cvar_VariableString_t)0x0806f8ec;
-
-typedef float (*Cvar_VariableValue_t)(const char *var_name);
-static const Cvar_VariableValue_t Cvar_VariableValue = (Cvar_VariableValue_t)0x0806f8a0;
-
-typedef char* (*Cvar_InfoString_t)(int bit);
-static const Cvar_InfoString_t Cvar_InfoString = (Cvar_InfoString_t)0x0806fc30;
-////
+//static const Cvar_FindVar_t Cvar_FindVar = (Cvar_FindVar_t)0x0806e9b4; //iw1x-server
+static const Cvar_FindVar_t Cvar_FindVar = (Cvar_FindVar_t)0x8072916; // coduoextended
 
 //// FS
 typedef void (*FS_ConvertPath_t)(char *s);
@@ -149,27 +142,14 @@ static const FS_WriteFile_t FS_WriteFile = (FS_WriteFile_t)0x08062a2c;
 //typedef void (*G_Say_t)(gentity_s *ent, gentity_s *target, int mode, const char *chatText);
 //extern G_Say_t G_Say;
 
-typedef void (*G_RegisterCvars_t)(void);
-extern G_RegisterCvars_t G_RegisterCvars;
-
-typedef int (*G_LocalizedStringIndex_t)(const char *string);
-extern G_LocalizedStringIndex_t G_LocalizedStringIndex;
 ////
 
 //// Get
-typedef unsigned int (*GetVariableName_t)(unsigned int a1);
-static const GetVariableName_t GetVariableName = (GetVariableName_t)0x080a3060;
 
-typedef unsigned int (*GetNextVariable_t)(unsigned int a1);
-static const GetNextVariable_t GetNextVariable = (GetNextVariable_t)0x080a3028;
 ////
 
 //// Huff
-typedef void (*Huff_Decompress_t)(msg_t *mbuf, int offset);
-static const Huff_Decompress_t Huff_Decompress = (Huff_Decompress_t)0x08071f7c;
 
-typedef void (*Huff_offsetReceive_t)(node_t *node, int *ch, byte *fin, int *offset);
-static const Huff_offsetReceive_t Huff_offsetReceive = (Huff_offsetReceive_t)0x080724fc;
 ////
 
 //// I
@@ -178,11 +158,7 @@ static const I_strncmp_t I_strncmp = (I_strncmp_t)0x0808315c;
 ////
 
 //// Info
-typedef void (*Info_SetValueForKey_t)(char *s, const char *key, const char *value);
-static const Info_SetValueForKey_t Info_SetValueForKey = (Info_SetValueForKey_t)0x080827d4;
 
-typedef char* (*Info_ValueForKey_t)(const char *s, const char *key);
-static const Info_ValueForKey_t Info_ValueForKey = (Info_ValueForKey_t)0x08082460;
 ////
 
 //// MSG
@@ -263,9 +239,6 @@ static const NET_CompareAdr_t NET_CompareAdr = (NET_CompareAdr_t)0x08080dec;
 
 //// PM
 
-typedef void (*PM_ClipVelocity_t)(const float *in, const float *normal, float *out, float overbounce);
-
-typedef void (*PM_NoclipMove_t)();
 ////
 
 //// Q

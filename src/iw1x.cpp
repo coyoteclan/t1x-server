@@ -33,8 +33,8 @@ void custom_Com_Init(char *commandLine)
 
     //// Cvars
     // Create references
-    //fs_game = Cvar_FindVar("fs_game");
-    //printf("fs_game: %p\n", fs_game);
+    fs_game = Cvar_FindVar("fs_game");
+    printf("fs_game: %p\n", fs_game);
 
     // Register
     //Cvar_Get("iw1x", "1", CVAR_SERVERINFO);
