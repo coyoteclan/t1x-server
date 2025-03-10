@@ -31,14 +31,14 @@ endif()
 # Source files
 set(SOURCES
     ${CMAKE_SOURCE_DIR}/src/hook.cpp
-    ${CMAKE_SOURCE_DIR}/src/iw1x.cpp
+    ${CMAKE_SOURCE_DIR}/src/t1x.cpp
 )
 
-add_library(iw1x SHARED ${SOURCES})
-target_precompile_headers(iw1x PRIVATE ${CMAKE_SOURCE_DIR}/src/pch.h)
+add_library(t1x SHARED ${SOURCES})
+target_precompile_headers(t1x PRIVATE ${CMAKE_SOURCE_DIR}/src/pch.h)
 
 # Output properties
-set_target_properties(iw1x PROPERTIES
+set_target_properties(t1x PROPERTIES
     OUTPUT_NAME "t1x"
     PREFIX ""
     SUFFIX ".so"
@@ -46,7 +46,7 @@ set_target_properties(iw1x PROPERTIES
 )
 
 # Linked libraries
-target_link_libraries(iw1x
+target_link_libraries(t1x
     dl
     pthread
 )

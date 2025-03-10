@@ -379,39 +379,6 @@ typedef enum
 
 typedef void netProfileInfo_t;
 
-typedef enum
-{
-    TR_STATIONARY = 0,
-    TR_INTERPOLATE = 1,
-    TR_LINEAR = 2,
-    TR_LINEAR_STOP = 3,
-    TR_SINE = 4,
-    TR_GRAVITY = 5,
-    TR_GRAVITY_PAUSED = 6,
-    TR_ACCELERATE = 7,
-    TR_DECCELERATE = 8
-} trType_t;
-
-typedef struct
-{
-    trType_t trType;
-    int trTime;
-    int trDuration;
-    vec3_t trBase;
-    vec3_t trDelta;
-} trajectory_t;
-
-typedef enum
-{
-    PM_NORMAL = 0x0,
-    PM_NORMAL_LINKED = 0x1,
-    PM_NOCLIP = 0x2,
-    PM_UFO = 0x3,
-    PM_SPECTATOR = 0x4,
-    PM_INTERMISSION = 0x5,
-    PM_DEAD = 0x6,
-    PM_DEAD_LINKED = 0x7,
-} pmtype_t;
 
 typedef enum
 {
@@ -468,23 +435,6 @@ typedef enum
     EXEC_INSERT,
     EXEC_APPEND
 } cbufExec_t;
-
-struct pml_t
-{
-    vec3_t forward;         // 0x0
-    vec3_t right;           // 0xC
-    vec3_t up;              // 0x18
-    float frametime;        // 0x24
-    int msec;               // 0x28
-    int walking;            // 0x2C
-    int groundPlane;        // 0x30
-    int almostGroundPlane;  // 0x34
-    trace_t groundTrace;    // 0x38
-    float impactSpeed;      // 0x68
-    vec3_t previous_origin;
-    vec3_t previous_velocity;
-    //...
-};
 
 typedef struct
 {
