@@ -300,7 +300,13 @@ void hook_SV_DirectConnect(netadr_t from)
         for (int i = 0; i < MAX_CHALLENGES; i++)
         {
             challenge_t *challenge = &svs.challenges[i];
-            if (NET_CompareAdr(from, challenge->adr))
+            //printf("sizeof(netadr_t) = %zu\n", sizeof(netadr_t));
+            printf("&from = %p\n", &from);
+            printf("&challenge->adr = %p\n", &challenge->adr);
+            printf("NET_CompareAdrSigned(&from, &challenge->adr) = %d\n", NET_CompareAdrSigned(&from, &challenge->adr));
+            printf("NET_AdrToString(from) = %s\n", NET_AdrToString(from));
+            printf("NET_AdrToString(challenge->adr) = %s\n", NET_AdrToString(challenge->adr));
+            if (NET_CompareAdrSigned(&from, &challenge->adr) == 0)
             {
                 if (challenge->challenge == userinfoChallenge)
                 {

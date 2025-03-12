@@ -131,8 +131,8 @@ static const NET_AdrToString_t NET_AdrToString = (NET_AdrToString_t)0x080848f8;
 typedef void (*NET_OutOfBandPrint_t)(netsrc_t net_socket, netadr_t adr, const char *format, ...);
 static const NET_OutOfBandPrint_t NET_OutOfBandPrint = (NET_OutOfBandPrint_t)0x08084d76;
 
-typedef qboolean (*NET_CompareAdr_t)(netadr_t a, netadr_t b);
-static const NET_CompareAdr_t NET_CompareAdr = (NET_CompareAdr_t)0x080849fe;
+typedef int (*NET_CompareAdrSigned_t)(netadr_t *a, netadr_t *b);
+static const NET_CompareAdrSigned_t NET_CompareAdrSigned = (NET_CompareAdrSigned_t)0x080849fe;
 
 ////
 

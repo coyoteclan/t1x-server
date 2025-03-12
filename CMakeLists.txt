@@ -23,7 +23,8 @@ message(STATUS "${SEPARATOR}")
 # -ggdb:    Debug info for gdb
 # -O2:      Moderate optimization
 if(DEBUG_BUILD)
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g -ggdb")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g -m32 -ggdb")
+    set(CMAKE_SHARED_LINKER_FLAGS "-g -m32")
 else()
     #set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O2")
 endif()
