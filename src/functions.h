@@ -47,13 +47,26 @@ typedef void (*Cmd_ArgvBuffer_t)(int arg, char *buffer, int bufferLength);
 static const Cmd_ArgvBuffer_t Cmd_ArgvBuffer = (Cmd_ArgvBuffer_t)0x0805b27c;
 
 typedef void (*Cmd_TokenizeString_t)(const char *text_in);
-static const Cmd_TokenizeString_t Cmd_TokenizeString = (Cmd_TokenizeString_t)0x0805b398;
-
-typedef void (*Cmd_ExecuteString_t)(const char *cmd);
-static const Cmd_ExecuteString_t Cmd_ExecuteString = (Cmd_ExecuteString_t)0x0805afe0;
+static const Cmd_TokenizeString_t Cmd_TokenizeString = (Cmd_TokenizeString_t)0x08060257;
 ////
 
 //// Com
+
+typedef void (*Com_Printf_t)(const char *format, ...);
+static const Com_Printf_t Com_Printf = (Com_Printf_t)0x08070248;
+
+typedef void (*Com_DPrintf_t)(const char *format, ...);
+static const Com_DPrintf_t Com_DPrintf = (Com_DPrintf_t)0x08070297;
+
+typedef void (*Com_Error_t)(errorParm_t code, const char *format, ...);
+static const Com_Error_t Com_Error = (Com_Error_t)0x080704ac;
+
+typedef char* (*Com_Parse_t)(const char **data_p);
+static const Com_Parse_t Com_Parse = (Com_Parse_t)0x08085e0b;
+
+typedef void (*Com_SkipRestOfLine_t)(const char **data);
+
+typedef int (*Com_ParseInt_t)(const char **data);
 
 ////
 
@@ -71,6 +84,12 @@ typedef cvar_t* (*Cvar_FindVar_t)(const char *var_name);
 static const Cvar_FindVar_t Cvar_FindVar = (Cvar_FindVar_t)0x08072fae;
 
 //// FS
+
+typedef int (*FS_ReadFile_t)(const char* qpath, void** buffer);
+static const FS_ReadFile_t FS_ReadFile = (FS_ReadFile_t)0x08062eb0; //FUN_08062eb0
+
+typedef void (*FS_FreeFile_t)(void* buffer);
+static const FS_FreeFile_t FS_FreeFile = (FS_FreeFile_t)0x080629f4;//FUN_08063207
 
 ////
 
@@ -95,6 +114,9 @@ static const I_strncmp_t I_strncmp = (I_strncmp_t)0x0808315c;
 
 //// Info
 
+typedef char* (*Info_ValueForKey_t)(const char *s, const char *key);
+static const Info_ValueForKey_t Info_ValueForKey = (Info_ValueForKey_t)0x08086e7f;
+
 ////
 
 //// MSG
@@ -102,6 +124,15 @@ static const I_strncmp_t I_strncmp = (I_strncmp_t)0x0808315c;
 ////
 
 //// NET
+
+typedef const char* (*NET_AdrToString_t)(netadr_t a);
+static const NET_AdrToString_t NET_AdrToString = (NET_AdrToString_t)0x080848f8;
+
+typedef void (*NET_OutOfBandPrint_t)(netsrc_t net_socket, netadr_t adr, const char *format, ...);
+static const NET_OutOfBandPrint_t NET_OutOfBandPrint = (NET_OutOfBandPrint_t)0x08084d76;
+
+typedef qboolean (*NET_CompareAdr_t)(netadr_t a, netadr_t b);
+static const NET_CompareAdr_t NET_CompareAdr = (NET_CompareAdr_t)0x080849fe;
 
 ////
 
@@ -137,6 +168,9 @@ static const SV_SpawnServer_t SV_SpawnServer = (SV_SpawnServer_t)0x0808a220;
 
 typedef void (*SV_AuthorizeIpPacket_t)(netadr_t from);
 static const SV_AuthorizeIpPacket_t SV_AuthorizeIpPacket = (SV_AuthorizeIpPacket_t)0x0808a1c5;
+
+typedef void (*SV_DirectConnect_t)(netadr_t from);
+static const SV_DirectConnect_t SV_DirectConnect = (SV_DirectConnect_t)0x0808ac82;
 ////
 
 //// SVC
