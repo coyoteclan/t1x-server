@@ -624,33 +624,32 @@ typedef struct
 {
     netadr_t adr;
     int challenge;
-    int time;
+    /*int time;
     int pingTime;
     int firstTime;
     int firstPing;
-    qboolean connected;
+    qboolean connected;//*/
 } challenge_t;//*/
-#define CHALLENGES ((challenge_t *)0x084f707c)
 
-/*
+///*
 typedef struct
 {
     qboolean initialized;
-    int time;
+    /*int time;
     int snapFlagServerBit;
     client_t *clients;
     int numSnapshotEntities;
     int numSnapshotClients;
     int nextSnapshotEntities;
-    int nextSnapshotClients;
+    int nextSnapshotClients;//*/
     byte gap[0x34];
     int nextHeartbeatTime;
     challenge_t challenges[MAX_CHALLENGES];
-    netadr_t redirectAddress;
-    netadr_t authorizeAddress;
+    //netadr_t redirectAddress;
+    //netadr_t authorizeAddress;
     int sv_lastTimeMasterServerCommunicated;
 } serverStatic_t;//*/
-/*
+///*
 typedef enum
 {
     SS_DEAD,
