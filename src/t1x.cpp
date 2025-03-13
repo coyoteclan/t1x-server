@@ -196,6 +196,45 @@ bool SVC_RateLimitAddress(netadr_t from, int burst, int period)
     return SVC_RateLimit(bucket, burst, period);
 }
 
+/*void dumpServerStatic() {
+    serverStatic_t *svsPtr = (serverStatic_t *)0x084886e0; // replace with the correct address when found
+    printf("svs at: %p\n", (void*)svsPtr);
+    printf("initialized: %d\n", svsPtr->initialized);
+    printf("time: %d\n", svsPtr->time);
+    printf("snapFlagServerBit: %d\n", svsPtr->snapFlagServerBit);
+    printf("clients pointer: %p\n", (void*)svsPtr->clients);
+    printf("numSnapshotEntities: %d\n", svsPtr->numSnapshotEntities);
+    printf("nextSnapshotEntities: %d\n", svsPtr->nextSnapshotEntities);
+    printf("nextHeartbeatTime: %d\n", svsPtr->nextHeartbeatTime);
+    // Dump challenges array
+    for (int i = 0; i < MAX_CHALLENGES; i++) {
+        challenge_t *challenge = &svsPtr->challenges[i];
+        printf("Challenge %d:\n", i);
+        printf("  adr: %s\n", NET_AdrToString(challenge->adr));
+        printf("  challenge: %d\n", challenge->challenge);
+        printf("  time: %d\n", challenge->time);
+        printf("  pingTime: %d\n", challenge->pingTime);
+        printf("  firstTime: %d\n", challenge->firstTime);
+        printf("  firstPing: %d\n", challenge->firstPing);
+        printf("  connected: %d\n", challenge->connected);
+    }
+    printf("redirectAddress: %s\n", NET_AdrToString(svsPtr->redirectAddress));
+    printf("authorizeAddress: %s\n", NET_AdrToString(svsPtr->authorizeAddress));
+}
+
+void dumpServerStaticRaw() {
+    unsigned char *svsPtr = (unsigned char *)&svs;
+    size_t size = sizeof(serverStatic_t);
+    printf("Raw dump of svs (size = %zu bytes):\n", size);
+    for (size_t i = 0; i < size; i++) {
+        printf("%02x ", svsPtr[i]);
+        if ((i + 1) % 16 == 0)
+            printf("\n");
+    }
+    printf("\n");
+}*/
+
+
 void hook_SV_DirectConnect(netadr_t from)
 {
     // Prevent using connect as an amplifier
@@ -297,9 +336,10 @@ void hook_SV_DirectConnect(netadr_t from)
     if (*sv_connectMessage->string && sv_connectMessageChallenges->integer)
     {
         int userinfoChallenge = atoi(Info_ValueForKey(userinfo, "challenge"));
+        //dumpServerStaticRaw();
         for (int i = 0; i < MAX_CHALLENGES; i++)
         {
-            challenge_t *challenge = &svs.challenges[i];
+            challenge_t *challenge = &CHALLENGES[i];//&svs.challenges[i];
             //printf("sizeof(netadr_t) = %zu\n", sizeof(netadr_t));
             printf("&from = %p\n", &from);
             printf("&challenge->adr = %p\n", &challenge->adr);

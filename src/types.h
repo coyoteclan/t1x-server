@@ -619,7 +619,7 @@ typedef struct client_s
     int bIsTestClient;
     int serverId;
 } client_t;
-
+///*
 typedef struct
 {
     netadr_t adr;
@@ -629,8 +629,10 @@ typedef struct
     int firstTime;
     int firstPing;
     qboolean connected;
-} challenge_t;
+} challenge_t;//*/
+#define CHALLENGES ((challenge_t *)0x084f707c)
 
+/*
 typedef struct
 {
     qboolean initialized;
@@ -647,14 +649,14 @@ typedef struct
     netadr_t redirectAddress;
     netadr_t authorizeAddress;
     int sv_lastTimeMasterServerCommunicated;
-} serverStatic_t;
-
+} serverStatic_t;//*/
+/*
 typedef enum
 {
     SS_DEAD,
     SS_LOADING,
     SS_GAME
-} serverState_t;
+} serverState_t;//*/
 
 enum clc_ops_e
 {
@@ -692,7 +694,7 @@ typedef struct
 
 extern stringIndex_t *scr_const;
 
-#define svs (*((serverStatic_t*)(0x084f7000)))//DAT_084f7000
+//#define svs (*((serverStatic_t*)(0x084886e0)))//DAT_084f7000, 0x084886e0
 
 // Require structure sizes to match
 #if __GNUC__ >= 6
