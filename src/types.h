@@ -645,18 +645,22 @@ typedef union netadr_u {
 
 
 ///*
+
 typedef struct
 {
-    //qboolean initialized;
-    /*int time;
+    qboolean initialized;
+    int time;
     int snapFlagServerBit;
+    byte pad1[4]; // grok rocks
     client_t *clients;
-    int numSnapshotEntities;
+    /*int numSnapshotEntities;
     int numSnapshotClients;
     int nextSnapshotEntities;
     int nextSnapshotClients;//*/
-    //int nextHeartbeatTime;
-    byte gap[0x60];
+    //byte gap[0x4c]; //without clients
+    byte gap[0x44];
+    int nextHeartbeatTime;
+    int nextStatusResponseTime;
     challenge_t challenges[MAX_CHALLENGES]; //at 0x084f7060
     //netadr_t redirectAddress;
     //netadr_t authorizeAddress;

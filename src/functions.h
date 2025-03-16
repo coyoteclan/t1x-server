@@ -7,7 +7,7 @@ extern va_t va;
 typedef void (*G_Error_t)(const char *fmt, ...);
 
 typedef void (*Cbuf_ExecuteText_t)(cbufExec_t exec_when, const char* text);
-static const Cbuf_ExecuteText_t Cbuf_ExecuteText = (Cbuf_ExecuteText_t)0x0805a8a0;
+static const Cbuf_ExecuteText_t Cbuf_ExecuteText = (Cbuf_ExecuteText_t)0x0805faf4;
 
 typedef void* (*Z_MallocInternal_t)(int size);
 static const Z_MallocInternal_t Z_MallocInternal = (Z_MallocInternal_t)0x080681e8;
@@ -93,7 +93,19 @@ typedef int (*FS_ReadFile_t)(const char* qpath, void** buffer);
 static const FS_ReadFile_t FS_ReadFile = (FS_ReadFile_t)0x08062eb0; //FUN_08062eb0
 
 typedef void (*FS_FreeFile_t)(void* buffer);
-static const FS_FreeFile_t FS_FreeFile = (FS_FreeFile_t)0x080629f4;//FUN_08063207
+static const FS_FreeFile_t FS_FreeFile = (FS_FreeFile_t)0x08063207;//writefile: 0x080629f4;//FUN_08063207
+
+typedef int (*FS_FOpenFileByMode_t)(const char *qpath, fileHandle_t *f, fsMode_t mode);
+static const FS_FOpenFileByMode_t FS_FOpenFileByMode = (FS_FOpenFileByMode_t)0x08065d85;
+
+typedef void (*FS_Write_t)(fileHandle_t h, const char *fmt, ...);
+static const FS_Write_t FS_Write = (FS_Write_t)0x08062983;
+
+typedef void (*FS_FCloseFile_t)(fileHandle_t f);
+static const FS_FCloseFile_t FS_FCloseFile = (FS_FCloseFile_t)0x080610d6;
+
+typedef void (*FS_WriteFile_t)(const char* filename, const void* buffer, int size);
+static const FS_WriteFile_t FS_WriteFile = (FS_WriteFile_t)0x0806323f;
 
 ////
 
@@ -160,6 +172,7 @@ extern Q_strupr_t Q_strupr;
 typedef void (*Q_strcat_t)(char *dest, int size, const char *src);
 
 typedef void (*Q_strncpyz_t)(char *dest, const char *src, int destsize);
+//static const Q_strncpyz_t Q_strncpyz = (Q_strncpyz_t)0x0808691a;
 
 typedef void (*Q_CleanStr_t)(char *string);
 
@@ -174,13 +187,23 @@ static const Q_stricmp_t Q_stricmp = (Q_stricmp_t)0x080830e8;
 //// SV
 
 typedef void (*SV_SpawnServer_t)(char *server);
-static const SV_SpawnServer_t SV_SpawnServer = (SV_SpawnServer_t)0x0808a220;
+static const SV_SpawnServer_t SV_SpawnServer = (SV_SpawnServer_t)0x08091b72;
+
+typedef void (*SV_Startup_t)(void);
+static const SV_Startup_t SV_Startup = (SV_Startup_t)0x08091473;
 
 typedef void (*SV_AuthorizeIpPacket_t)(netadr_t from);
 static const SV_AuthorizeIpPacket_t SV_AuthorizeIpPacket = (SV_AuthorizeIpPacket_t)0x0808a1c5;
 
 typedef void (*SV_DirectConnect_t)(netadr_t from);
 static const SV_DirectConnect_t SV_DirectConnect = (SV_DirectConnect_t)0x0808ac82;
+
+typedef void (*SV_SendServerCommand_t)(client_t *cl, int type, const char *fmt, ...);
+static const SV_SendServerCommand_t SV_SendServerCommand = (SV_SendServerCommand_t)0x08092f86;
+
+typedef void (*SV_DropClient_t)(client_t *drop, const char *reason);
+static const SV_DropClient_t SV_DropClient = (SV_DropClient_t)0x0808ba15;
+
 ////
 
 //// SVC
