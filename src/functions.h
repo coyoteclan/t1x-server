@@ -40,8 +40,8 @@ static const Cmd_Argv_t Cmd_Argv = (Cmd_Argv_t)0x0805ff28;
 typedef int (*Cmd_Argc_t)();
 static const Cmd_Argc_t Cmd_Argc = (Cmd_Argc_t)0x0805b24c;
 
-//typedef void (*Cmd_AddCommand_t)(const char *cmd_name, xcommand_t function);
-//static const Cmd_AddCommand_t Cmd_AddCommand = (Cmd_AddCommand_t)0x0805aef8;
+typedef void (*Cmd_AddCommand_t)(const char *cmd_name, xcommand_t function);
+static const Cmd_AddCommand_t Cmd_AddCommand = (Cmd_AddCommand_t)0x08060272;
 
 typedef void (*Cmd_ArgvBuffer_t)(int arg, char *buffer, int bufferLength);
 static const Cmd_ArgvBuffer_t Cmd_ArgvBuffer = (Cmd_ArgvBuffer_t)0x0805b27c;
@@ -139,6 +139,11 @@ static const Info_ValueForKey_t Info_ValueForKey = (Info_ValueForKey_t)0x08086e7
 
 ////
 
+typedef bool (*NET_CompareAdr_maybe_t)(
+    uint32_t a1, uint32_t a2, uint32_t a3, uint32_t a4, uint32_t a5,  // first netadr_t
+    uint32_t b1, uint32_t b2, uint32_t b3, uint32_t b4, uint32_t b5   // second netadr_t
+);
+
 //// NET
 
 typedef const char* (*NET_AdrToString_t)(netadr_t a);
@@ -150,11 +155,8 @@ static const NET_OutOfBandPrint_t NET_OutOfBandPrint = (NET_OutOfBandPrint_t)0x0
 typedef int (*NET_CompareAdrSigned_t)(netadr_t *a, netadr_t *b);
 static const NET_CompareAdrSigned_t NET_CompareAdrSigned = (NET_CompareAdrSigned_t)0x080849fe;
 
-typedef bool (*NET_CompareAdr_maybe_t)(
-    uint32_t a1, uint32_t a2, uint32_t a3, uint32_t a4, uint32_t a5,  // first netadr_t
-    uint32_t b1, uint32_t b2, uint32_t b3, uint32_t b4, uint32_t b5   // second netadr_t
-);
-static const NET_CompareAdr_maybe_t NET_CompareAdr_maybe = (NET_CompareAdr_maybe_t)0x08084af7;//08084af7
+//typedef qboolean (*NET_CompareAdr_maybe_t)(netadr_t a, netadr_t b);
+//static const NET_CompareAdr_maybe_t NET_CompareAdr_maybe = (NET_CompareAdr_maybe_t)0x08084af7;//08084af7
 
 ////
 
@@ -172,7 +174,7 @@ extern Q_strupr_t Q_strupr;
 typedef void (*Q_strcat_t)(char *dest, int size, const char *src);
 
 typedef void (*Q_strncpyz_t)(char *dest, const char *src, int destsize);
-//static const Q_strncpyz_t Q_strncpyz = (Q_strncpyz_t)0x0808691a;
+static const Q_strncpyz_t Q_strncpyz = (Q_strncpyz_t)0x0808691a;
 
 typedef void (*Q_CleanStr_t)(char *string);
 

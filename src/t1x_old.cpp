@@ -15,7 +15,7 @@ cvar_t *sv_connectMessageChallenges;
 // Objects
 // Functions
 //Com_SkipRestOfLine_t Com_SkipRestOfLine;
-//Com_ParseRestOfLine_t Com_ParseRestOfLine;
+Com_ParseRestOfLine_t Com_ParseRestOfLine;
 //Com_ParseInt_t Com_ParseInt;
 //Q_strncpyz_t Q_strncpyz;
 va_t va;
@@ -256,7 +256,7 @@ void dumpServerStatic() {
 }
 
 // Our hooking function
-bool hook_NET_CompareAdr_maybe(
+/*bool hook_NET_CompareAdr_maybe(
     uint32_t fa1, uint32_t fa2, uint32_t fa3, uint32_t fa4, uint32_t fa5,
     uint32_t ta1, uint32_t ta2, uint32_t ta3, uint32_t ta4, uint32_t ta5
 )
@@ -284,8 +284,8 @@ bool hook_NET_CompareAdr_maybe(
 
     // Optionally parse them as netadr_t if you want to interpret IP, port, etc.
     // e.g., if from.field1 = type, from.field2 = part of IP, etc.
-    printf("  from: %d.%d.%d.%d:%d\n", from.field2, from.field3, from.field4, from.field5, from.field1);
-    printf("  to:   %d.%d.%d.%d:%d\n", to.field2, to.field3, to.field4, to.field5, to.field1);
+
+    // Call the original function so the game logic still runs
 
     return true;
 }
@@ -343,16 +343,20 @@ void hook_SV_DirectConnect(netadr_t from)
     auto banInfo = getBanInfoForIp(ip);
     if (std::get<0>(banInfo) == true) // banned
     {
+        printf("[DEBUG] IP is banned: %s\n", NET_AdrToString(from));
         time_t current_time = time(NULL);
         std::string remainingTime;
 
         if (std::get<1>(banInfo) != -1) // duration
         {
+            printf("[DEBUG] Ban duration is not permanent. Calculating remaining time...\n");
             int elapsed_seconds = difftime(current_time, std::get<2>(banInfo)); // ban date
             int remaining_seconds = std::get<1>(banInfo) - elapsed_seconds;
+            printf("[DEBUG] Elapsed seconds: %d, Remaining seconds: %d\n", elapsed_seconds, remaining_seconds);
 
             if (remaining_seconds <= 0)
             {
+                printf("[DEBUG] Ban expired. Unbanning IP: %s\n", ip);
                 Cbuf_ExecuteText(EXEC_APPEND, va("unban %s\n", ip));
                 unbanned = true;
             }
@@ -384,7 +388,12 @@ void hook_SV_DirectConnect(netadr_t from)
                     oss << seconds << " second" << (seconds > 1 ? "s" : "");
 
                 remainingTime = oss.str();
+                printf("[DEBUG] Remaining ban time: %s\n", remainingTime.c_str());
             }
+        }
+        else
+        {
+            printf("[DEBUG] Ban duration is permanent.\n");
         }
 
         if (!unbanned)
@@ -402,34 +411,31 @@ void hook_SV_DirectConnect(netadr_t from)
             }
 
             Com_Printf("[DEBUG] Rejected connection from banned IP: %s\n", NET_AdrToString(from));
+            printf("[DEBUG] Sending ban info message to client.\n");
             NET_OutOfBandPrint(NS_SERVER, from, banInfoMessage.c_str());
             return;
         }
     }
+    else
+    {
+        printf("[DEBUG] IP is not banned: %s\n", NET_AdrToString(from));
+    }
 
     if(unbanned)
         Cmd_TokenizeString(argBackup.c_str());
+    
+    //printf("svs.initialized: %d\n", svs.initialized);
 
-    if(*sv_connectMessage->string && sv_connectMessageChallenges->integer)
+    if (*sv_connectMessage->string && sv_connectMessageChallenges->integer)
     {
         int userinfoChallenge = atoi(Info_ValueForKey(userinfo, "challenge"));
-
-        printf("userinfoChallenge: %d\n", userinfoChallenge);
-        
-        printf("from: %s\n", NET_AdrToString(from));
-        printf("comp: %d\n", NET_CompareAdrSigned(&from, &svs.challenges[0].adr));
-        dumpServerStatic();
-        NET_OutOfBandPrint(NS_SERVER, from, "error\n%s\n", sv_connectMessage->string);
-        return;
-        
-        for(int i = 0; i < MAX_CHALLENGES; i++)
+        //dumpServerStatic();
+        for (int i = 0; i < MAX_CHALLENGES; i++)
         {
             challenge_t *challenge = &svs.challenges[i];
-            
-            //if(NET_CompareAdrSigned(&from, &challenge->adr) == 0)
-            if(1 == 1)
+            if (NET_CompareAdrSigned(&from, &challenge->adr) == 0)
             {
-                if(challenge->challenge == userinfoChallenge)
+                if (challenge->challenge == userinfoChallenge)
                 {
                     if (customChallenge[i].ignoredCount < sv_connectMessageChallenges->integer)
                     {
@@ -445,12 +451,12 @@ void hook_SV_DirectConnect(netadr_t from)
     SV_DirectConnect(from);
 }
 
-/*bool hook_SkipRestOfLine( const char *( *data ) )
+bool hook_SkipRestOfLine( const char *( *data ) )
 {
     printf("hook_SkipRestOfLine\n");
     printf("data: %s\n", *data);
     return true;
-}//*/
+}
 
 ////// Custom operator commands
 //// ban & unban
@@ -480,9 +486,12 @@ std::tuple<bool, int, int, std::string> getBanInfoForIp(char* ip)
             std::get<1>(banInfo) = Com_ParseInt(&text); // duration
             std::get<2>(banInfo) = Com_ParseInt(&text); // ban date
             std::get<3>(banInfo) = Com_Parse(&text);    // reason
+            printf("successful check\n");
             break;
         }
+        printf("before skip\n");
         Com_SkipRestOfLine(&text);
+        printf("after skip\n");
     }
     FS_FreeFile(file);
     return banInfo;
@@ -1064,7 +1073,7 @@ class t1x
         
         hook_call(0x0808a2c9, (int)hook_AuthorizeState);
         hook_call(0x0809466c, (int)hook_SV_DirectConnect);
-        hook_call(0x0808af8f, (int)hook_NET_CompareAdr_maybe);
+        //hook_call(0x0808af8f, (int)hook_NET_CompareAdr_maybe);
         //hook_call(0x0808ad27, (int)hook_NET_OutOfBandPrint);
         //hook_call(0x0806d8d3, (int)hook_SkipRestOfLine);
 

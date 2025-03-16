@@ -82,7 +82,7 @@
 #define PMF_LADDER      0x10
 #define PMF_SLIDING     0x100
 
-//typedef void (*xcommand_t)(void);
+typedef void (*xcommand_t)(void);
 
 typedef unsigned char byte;
 typedef struct gclient_s gclient_t;
@@ -630,7 +630,7 @@ typedef struct
     qboolean connected;//*/
 } challenge_t;//*/
 
-/*// Basic union: 5 x 32 bits = 20 bytes
+// Basic union: 5 x 32 bits = 20 bytes
 typedef union netadr_u {
     struct {
         // 20 bytes in total
