@@ -65,8 +65,12 @@ typedef char* (*Com_Parse_t)(const char **data_p);
 static const Com_Parse_t Com_Parse = (Com_Parse_t)0x08085e0b;
 
 typedef void (*Com_SkipRestOfLine_t)(const char **data);
+static const Com_SkipRestOfLine_t Com_SkipRestOfLine = (Com_SkipRestOfLine_t)0x08085fba;
+
+typedef char* (*Com_ParseRestOfLine_t)(const char **data);
 
 typedef int (*Com_ParseInt_t)(const char **data);
+static const Com_ParseInt_t Com_ParseInt = (Com_ParseInt_t)0x080860ad;
 
 ////
 
@@ -133,6 +137,12 @@ static const NET_OutOfBandPrint_t NET_OutOfBandPrint = (NET_OutOfBandPrint_t)0x0
 
 typedef int (*NET_CompareAdrSigned_t)(netadr_t *a, netadr_t *b);
 static const NET_CompareAdrSigned_t NET_CompareAdrSigned = (NET_CompareAdrSigned_t)0x080849fe;
+
+typedef bool (*NET_CompareAdr_maybe_t)(
+    uint32_t a1, uint32_t a2, uint32_t a3, uint32_t a4, uint32_t a5,  // first netadr_t
+    uint32_t b1, uint32_t b2, uint32_t b3, uint32_t b4, uint32_t b5   // second netadr_t
+);
+static const NET_CompareAdr_maybe_t NET_CompareAdr_maybe = (NET_CompareAdr_maybe_t)0x08084af7;//08084af7
 
 ////
 

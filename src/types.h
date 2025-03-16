@@ -166,6 +166,11 @@ typedef enum
     NA_BROADCAST_IPX = 6
 } netadrtype_t;
 
+typedef enum {
+	NS_CLIENT,
+	NS_SERVER
+} netsrc_t;
+
 typedef struct
 {
     netadrtype_t type;
@@ -173,12 +178,6 @@ typedef struct
     byte ipx[10];
     unsigned short port;
 } netadr_t;
-
-typedef enum
-{
-    NS_CLIENT,
-    NS_SERVER
-} netsrc_t;
 
 typedef struct
 {
@@ -631,10 +630,24 @@ typedef struct
     qboolean connected;//*/
 } challenge_t;//*/
 
+/*// Basic union: 5 x 32 bits = 20 bytes
+typedef union netadr_u {
+    struct {
+        // 20 bytes in total
+        uint32_t field1;
+        uint32_t field2;
+        uint32_t field3;
+        uint32_t field4;
+        uint32_t field5;
+    };
+    uint32_t raw[5];
+} netadr_u;//*/
+
+
 ///*
 typedef struct
 {
-    qboolean initialized;
+    //qboolean initialized;
     /*int time;
     int snapFlagServerBit;
     client_t *clients;
@@ -642,12 +655,12 @@ typedef struct
     int numSnapshotClients;
     int nextSnapshotEntities;
     int nextSnapshotClients;//*/
-    byte gap[0x34];
-    int nextHeartbeatTime;
-    challenge_t challenges[MAX_CHALLENGES];
+    //int nextHeartbeatTime;
+    byte gap[0x60];
+    challenge_t challenges[MAX_CHALLENGES]; //at 0x084f7060
     //netadr_t redirectAddress;
     //netadr_t authorizeAddress;
-    int sv_lastTimeMasterServerCommunicated;
+    //int sv_lastTimeMasterServerCommunicated;
 } serverStatic_t;//*/
 ///*
 typedef enum
@@ -693,7 +706,7 @@ typedef struct
 
 extern stringIndex_t *scr_const;
 
-//#define svs (*((serverStatic_t*)(0x084886e0)))//DAT_084f7000, 0x084886e0
+#define svs (*((serverStatic_t*)(0x084f7000)))//DAT_084f7000, 0x084886e0
 
 // Require structure sizes to match
 #if __GNUC__ >= 6
