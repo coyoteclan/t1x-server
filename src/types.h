@@ -572,10 +572,11 @@ typedef struct
     int messageSize;
 } clientSnapshot_t;
 
+/*
 typedef struct client_s
 {
     clientConnectState_t state;
-    qboolean sendAsActive;
+    //qboolean sendAsActive;
     const char *dropReason;
     char userinfo[MAX_INFO_STRING];
     reliableCommands_t reliableCommands[MAX_RELIABLE_COMMANDS];
@@ -589,7 +590,7 @@ typedef struct client_s
     int lastClientCommand;
     char lastClientCommandString[MAX_STRINGLENGTH];
     gentity_t *gentity;
-    char name[MAX_NAME_LENGTH];
+    char name[MAX_NAME_LENGTH]; // needed
     char downloadName[MAX_QPATH];
     fileHandle_t download;
     int downloadSize;
@@ -603,7 +604,7 @@ typedef struct client_s
     int downloadSendTime;
     int deltaMessage;
     int nextReliableTime;
-    int lastPacketTime;
+    int lastPacketTime; // needed
     int lastConnectTime;
     int nextSnapshotTime;
     qboolean rateDelayed;
@@ -613,11 +614,26 @@ typedef struct client_s
     int rate;
     int snapshotMsec;
     int pureAuthentic;
-    netchan_t netchan;
+    netchan_t netchan; // needed
     unsigned short clscriptid;
     int bIsTestClient;
     int serverId;
 } client_t;
+
+//*/
+
+///*
+
+typedef struct client_s
+{
+    clientConnectState_t state;
+    byte gap[0x10a44];// to try: 0x4291, ... maybe not, 0x10a44 worked
+    char name[MAX_NAME_LENGTH];
+    //...
+} client_t;
+
+//*/
+
 ///*
 typedef struct
 {
@@ -650,8 +666,8 @@ typedef struct
 {
     qboolean initialized;
     int time;
+    int time2;
     int snapFlagServerBit;
-    byte pad1[4]; // grok rocks
     client_t *clients;
     /*int numSnapshotEntities;
     int numSnapshotClients;

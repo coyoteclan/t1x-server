@@ -38,7 +38,7 @@ typedef char* (*Cmd_Argv_t)(int arg);
 static const Cmd_Argv_t Cmd_Argv = (Cmd_Argv_t)0x0805ff28;
 
 typedef int (*Cmd_Argc_t)();
-static const Cmd_Argc_t Cmd_Argc = (Cmd_Argc_t)0x0805b24c;
+static const Cmd_Argc_t Cmd_Argc = (Cmd_Argc_t)0x0805ff1e;
 
 typedef void (*Cmd_AddCommand_t)(const char *cmd_name, xcommand_t function);
 static const Cmd_AddCommand_t Cmd_AddCommand = (Cmd_AddCommand_t)0x08060272;
