@@ -393,7 +393,7 @@ typedef enum
 
 typedef void netProfileInfo_t;
 
-typedef struct
+/*typedef struct
 {
     netsrc_t sock;
     int dropped;
@@ -409,6 +409,31 @@ typedef struct
     int unsentLength;
     byte unsentBuffer[MAX_MSGLEN];
     netProfileInfo_t *netProfile;
+} netchan_t;//*/
+
+typedef struct {
+    netsrc_t    sock;
+
+    int            dropped;            // between last packet and previous
+
+    netadr_t    remoteAddress;
+    int            qport;                // qport value to write when transmitting
+
+                                    // sequencing variables
+    int            incomingSequence;
+    int            outgoingSequence;
+
+    // incoming fragment assembly buffer
+    int            fragmentSequence;
+    int            fragmentLength;
+    byte        fragmentBuffer[MAX_MSGLEN];
+
+    // outgoing fragment buffer
+    // we need to space out the sending of large fragmented messages
+    qboolean    unsentFragments;
+    int            unsentFragmentStart;
+    int            unsentLength;
+    byte        unsentBuffer[MAX_MSGLEN];
 } netchan_t;
 
 typedef struct
@@ -620,6 +645,8 @@ typedef struct client_s
     int serverId;
 } client_t;
 
+
+
 //*/
 
 ///*
@@ -627,8 +654,12 @@ typedef struct client_s
 typedef struct client_s
 {
     clientConnectState_t state;
-    byte gap[0x10a44];// to try: 0x4291, ... maybe not, 0x10a44 worked
+    byte gap1[0x10a44];// to try: 0x4291, ... maybe not, 0x10a44 worked
     char name[MAX_NAME_LENGTH];
+    byte gap2[0x1b8];//byte gap[0x1d8]; // 0x10a44 - 0x1086c
+    int lastPacketTime; // at 0x10c1c
+    byte gap3[0x15ff0];//byte gap[0x15ff4];
+    netchan_t netchan; // at 0x26c10
     //...
 } client_t;
 
