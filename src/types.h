@@ -651,19 +651,36 @@ typedef struct client_s
 
 ///*
 
-typedef struct client_s
+/*typedef struct client_s
 {
     clientConnectState_t state;
     byte gap1[0x10a44];// to try: 0x4291, ... maybe not, 0x10a44 worked
     char name[MAX_NAME_LENGTH];
-    byte gap2[0x1b8];//byte gap[0x1d8]; // 0x10a44 - 0x1086c
+    byte gap2[0x1d8];//byte gap[0x1d8]; // 0x10a44 - 0x1086c
     int lastPacketTime; // at 0x10c1c
     byte gap3[0x15ff0];//byte gap[0x15ff4];
     netchan_t netchan; // at 0x26c10
     //...
-} client_t;
+} client_t;//*/
 
 //*/
+
+typedef struct client_s
+{
+    clientConnectState_t state; //0x0000
+    char pad_0004[8]; //0x0004
+    char userinfo[1024]; //0x000C
+    char pad_040C[67124]; //0x040C
+    void* gentity; //0x10A40
+    char name[32]; //0x10A44
+    char downloadName[64]; //0x10A64
+    int download; //0x10AA4
+    int downloadSize; //0x10AA8
+    int downloadCount; //0x10AAC
+    char N00032B1C[566672]; //0x10AB0
+    netchan_t netchan; //0x9B040
+    char pad_AB078[60]; //0xAB078
+} client_t;
 
 ///*
 typedef struct
