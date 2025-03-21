@@ -508,7 +508,7 @@ void hook_Com_Printf(const char *fmt, ...)
 }
 
 
-static void ban()
+/*static void ban()
 {
     Com_Printf("ban: I HAVE BEEN SUMMONED\n");
     if (!com_sv_running->integer)
@@ -535,20 +535,13 @@ static void ban()
     }
     return;
 }//*/
-/*static void ban()
+static void ban()
 {
-    Com_Printf("ban: I HAVE BEEN SUMMONED\n");
     if (!com_sv_running->integer)
     {
         Com_Printf("Server is not running.\n");
         return;
     }
-    else
-        Com_Printf("Server is running.\n");
-    
-    Com_Printf("Size of svs: %d\n", sizeof(svs));
-    Com_Printf("Size of svs.clients: %d\n", sizeof(svs.clients[0]));
-    return;
 
     if (Cmd_Argc() < 3)
     {
@@ -607,11 +600,11 @@ static void ban()
                 if(!value.empty())
                     parsedParameters[argv] = value;
 
-                /
+                /*
                 Check if got admin client after first storage and only once
                 because it should be passed as first parameter from gsc
                 so you can redirect the error messages since the beginning
-                /
+                //*/
                 if (!clAdmin_searched)
                 {
                     auto adminParam = parsedParameters.find("-a");
@@ -820,7 +813,13 @@ static void ban()
     else
     {
         current_time = time(NULL);
-        FS_Write(file, "\"%s\" \"%s\" \"%i\" \"%i\" \"%s\"\r\n", ip, cleanName, duration, current_time, reason_log.c_str());
+        printf("\"%s\" \"%s\" \"%i\" \"%li\" \"%s\"\r\n", ip, cleanName, duration, current_time, reason_log.c_str());
+        //return;
+        char buffer[256];
+        int len = snprintf(buffer, sizeof(buffer), "\"%s\" \"%s\" \"%i\" \"%li\" \"%s\"\r\n",
+                   ip, cleanName, duration, current_time, reason_log.c_str());
+        FS_Write(buffer, len, file);
+        //FS_Write(file, "\"%s\" \"%s\" \"%i\" \"%i\" \"%s\"\r\n", ip, cleanName, duration, current_time, reason_log.c_str());
         FS_FCloseFile(file);
     }
 

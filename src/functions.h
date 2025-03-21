@@ -98,7 +98,8 @@ static const FS_FreeFile_t FS_FreeFile = (FS_FreeFile_t)0x08063207;//writefile: 
 typedef int (*FS_FOpenFileByMode_t)(const char *qpath, fileHandle_t *f, fsMode_t mode);
 static const FS_FOpenFileByMode_t FS_FOpenFileByMode = (FS_FOpenFileByMode_t)0x08065d85;
 
-typedef void (*FS_Write_t)(fileHandle_t h, const char *fmt, ...);
+//typedef void (*FS_Write_t)(fileHandle_t h, const char *fmt, ...);
+typedef void (*FS_Write_t)(void *buffer, size_t len, fileHandle_t f_handle);
 static const FS_Write_t FS_Write = (FS_Write_t)0x08062983;
 
 typedef void (*FS_FCloseFile_t)(fileHandle_t f);
