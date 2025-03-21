@@ -654,14 +654,17 @@ typedef struct client_s
 /*typedef struct client_s
 {
     clientConnectState_t state;
-    byte gap1[0x10a44];// to try: 0x4291, ... maybe not, 0x10a44 worked
-    char name[MAX_NAME_LENGTH];
-    byte gap2[0x1d8];//byte gap[0x1d8]; // 0x10a44 - 0x1086c
-    int lastPacketTime; // at 0x10c1c
-    byte gap3[0x15ff0];//byte gap[0x15ff4];
-    netchan_t netchan; // at 0x26c10
+    //byte gap1[0x10a44];// to try: 0x4291, ... maybe not, 0x10a44 worked
+    //char name[MAX_NAME_LENGTH];
+    //byte gap2[0x1d8];//byte gap[0x1d8]; // 0x10a44 - 0x1086c
+    byte gap[0x26c14];
+    //int lastPacketTime; // at 0x10c1c
+    //byte gap3[0x15ff0];//byte gap[0x15ff4];
+    netchan_t netchan; // at 0x26c10 or 0x9B040 maybe
     //...
 } client_t;//*/
+
+// guid at 0xab080
 
 //*/
 
@@ -677,10 +680,22 @@ typedef struct client_s
     int download; //0x10AA4
     int downloadSize; //0x10AA8
     int downloadCount; //0x10AAC
-    char N00032B1C[566672]; //0x10AB0
+    int downloadClientBlock; //0x10AB0
+    int downloadCurrentBlock; //0x10AB4
+    int downloadXmitBlock; //0x10AB8
+    unsigned char	*downloadBlocks[MAX_DOWNLOAD_WINDOW]; //0x10ABC
+    int downloadBlockSize[MAX_DOWNLOAD_WINDOW]; //0x10ADC
+    qboolean downloadEOF; //0x10AFC
+    int downloadSendTime; //0x10B00
+    int unsure_if_fallback_or_time2; //0x10B04
+    char downloadURL[MAX_OSPATH]; //0x10B08
+    qboolean downloadingWWW; //0x10c08
+    qboolean clientDownloadingWWW; //0x10c0C
+    qboolean wwwFallback_maybe; //0x10c10
+    char N00032B1C[566668]; //0x10AB0
     netchan_t netchan; //0x9B040
     char pad_AB078[60]; //0xAB078
-} client_t;
+} client_t; //*/
 
 ///*
 typedef struct

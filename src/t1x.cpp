@@ -529,6 +529,7 @@ static void ban()
             Com_Printf("Client %d: %s, Client State: %d\n", i, clCheck->name, clCheck->state);
             Com_Printf("Client socket: %d\n", clCheck->netchan.sock);
             Com_Printf("Client IP: %s\n", NET_AdrToString(clCheck->netchan.remoteAddress));
+            //Com_Printf("Client last packet time: %d\n", clCheck->lastPacketTime);
         }
     }
     return;
