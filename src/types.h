@@ -671,11 +671,12 @@ typedef struct client_s
 typedef struct client_s
 {
     clientConnectState_t state; //0x0000
-    char pad_0004[8]; //0x0004
-    char userinfo[1024]; //0x000C
-    char pad_040C[67124]; //0x040C
-    void* gentity; //0x10A40
-    char name[32]; //0x10A44
+    int sendAsActive; //0x0004
+    char gap1[4]; //0x0008
+    char userinfo[1024]; //0x000c
+    char gap2[67124]; //0x040c
+    void* gentity; //0x10a40
+    char name[32]; //0x10a44
     char downloadName[64]; //0x10A64
     int download; //0x10AA4
     int downloadSize; //0x10AA8
@@ -692,10 +693,19 @@ typedef struct client_s
     qboolean downloadingWWW; //0x10c08
     qboolean clientDownloadingWWW; //0x10c0C
     qboolean wwwFallback_maybe; //0x10c10
-    char N00032B1C[566668]; //0x10AB0
+    int deltaMessage; //0x10c14
+    int nextReliableTime; //0x10c18
+    int lastPacketTime; //0x10c1c
+    int lastConnectTime; // 0x10c20
+    int nextSnapshotTime; //0x10c24
+    qboolean rateDelayed; //0x10c28
+    int timeoutCount; //0x10c2c
+    char gap3[566288]; //0x10AB0
     netchan_t netchan; //0x9B040
     char pad_AB078[60]; //0xAB078
 } client_t; //*/
+
+#define x sizeof(netchan_t)
 
 ///*
 typedef struct
