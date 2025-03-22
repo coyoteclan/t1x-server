@@ -110,7 +110,7 @@ void custom_SV_AddOperatorCommands()
     hook_SV_AddOperatorCommands->hook();
 
     Cmd_AddCommand("ipban", ban);
-    //Cmd_AddCommand("unban", unban);
+    Cmd_AddCommand("ipunban", unban);
     Cmd_AddCommand("meow", meow);
     Cmd_AddCommand("gosha", gosha);
 }
@@ -545,7 +545,7 @@ static void ban()
 
     if (Cmd_Argc() < 3)
     {
-        Com_Printf("Usage: ban (-i <IP address> | -n <client number>) [-r reason] [-d duration]\n");
+        Com_Printf("Usage: ipban (-i <IP address> | -n <client number>) [-r reason] [-d duration]\n");
         Com_Printf("Notes: Use h for hours or d for days\n");
         return;
     }
@@ -610,7 +610,17 @@ static void ban()
                     auto adminParam = parsedParameters.find("-a");
                     if (adminParam != parsedParameters.end())
                     {
-                        clAdmin = &svs.clients[std::stoi(adminParam->second)];
+                        int adminIndex = std::stoi(adminParam->second);
+                        if (adminIndex >= 0 && adminIndex < sv_maxclients->integer)
+                        {
+                            clAdmin = &svs.clients[adminIndex];
+                            printf("\nAdmin client found.\n");
+                            printf("Admin name: %s\n", clAdmin->name);
+                        }
+                        else
+                        {
+                            printf("Invalid admin client index: %d\n", adminIndex);
+                        }
                     }
                     clAdmin_searched = true;
                 }
@@ -831,6 +841,178 @@ static void ban()
     }
 }//*/
 
+static void unban()
+{
+    if (!com_sv_running->integer)
+    {
+        Com_Printf("Server is not running.\n");
+        return;
+    }
+
+    if (Cmd_Argc() < 2)
+    {
+        Com_Printf("Usage: ipunban -i <IP address>\n");
+        return;
+    }
+    
+    std::vector<std::string> argvList;
+    std::map<std::string, std::string> parsedParameters;
+    std::string infoMessage;
+    bool clAdmin_searched = false;
+    client_t *clAdmin = nullptr; // Initialize to nullptr
+    char *file;
+    int fileSize;
+    char *line;
+    std::string token;
+    bool found = false;
+    char *text;
+    std::string ip;
+    
+    // Directly store all the argv to be able to use Cmd_TokenizeString before the end of the parse
+    for (int i = 1; i < Cmd_Argc(); i++)
+    {
+        std::string argv = Cmd_Argv(i);
+        argvList.push_back(argv);
+    }
+
+    //// Parse and store the parameters
+    for (std::size_t i = 0; i < argvList.size(); i++)
+    {
+        std::string argv = argvList[i];
+        if (isValidBanParameter(argv, unbanParameters)) // Found an option
+        {
+            if (parsedParameters.find(argv) == parsedParameters.end())
+            {
+                // Parse the argument
+                std::string value;
+                for (std::size_t j = i+1; j < argvList.size(); j++)
+                {
+                    std::string argv_next = argvList[j];
+                    if (!isValidBanParameter(argv_next, unbanParameters))
+                    {
+                        if(j != i+1)
+                            value.append(" ");
+                        value.append(argv_next);
+                    }
+                    else
+                        break;
+                }
+                // Store the pair
+                if(!value.empty())
+                    parsedParameters[argv] = value;
+
+                /*
+                Check if got admin client after first storage and only once
+                because it should be passed as first parameter from gsc
+                so you can redirect the error messages since the beginning
+                */
+                if (!clAdmin_searched)
+                {
+                    auto adminParam = parsedParameters.find("-a");
+                    if (adminParam != parsedParameters.end())
+                    {
+                        int adminIndex = std::stoi(adminParam->second);
+                        if (adminIndex >= 0 && adminIndex < sv_maxclients->integer)
+                        {
+                            clAdmin = &svs.clients[adminIndex];
+                            printf("\nAdmin client found.\n");
+                            printf("Admin name: %s\n", clAdmin->name);
+                        }
+                        else
+                        {
+                            printf("Invalid admin client index: %d\n", adminIndex);
+                        }
+                    }
+                    clAdmin_searched = true;
+                }
+            }
+            else
+            {
+                infoMessage = "Duplicated option " + argv;
+                sendMessageToClient_orServerConsole(clAdmin, infoMessage);
+                return;
+            }
+        }
+        else if (argv[0] == '-' && !isValidBanParameter(argv, unbanParameters))
+        {
+            infoMessage = "Unrecognized option " + argv;
+            sendMessageToClient_orServerConsole(clAdmin, infoMessage);
+            return;
+        }
+    }
+    ////
+
+    //// Check the parameters
+    // IP
+    auto ipParam = parsedParameters.find("-i");
+    if (ipParam != parsedParameters.end())
+    {
+        struct sockaddr_in sa;
+        if(!inet_pton(AF_INET, ipParam->second.c_str(), &(sa.sin_addr)))
+        {
+            infoMessage = "Invalid IP address " + ipParam->second;
+            sendMessageToClient_orServerConsole(clAdmin, infoMessage);
+            return;
+        }
+        ip = ipParam->second;
+    }
+    else
+    {
+        infoMessage = "Specify an IP address";
+        sendMessageToClient_orServerConsole(clAdmin, infoMessage);
+        return;
+    }
+    ////
+    
+    // Remove IP from ban.txt
+    fileSize = FS_ReadFile("t1x_ban.txt", (void **)&file);
+    if (fileSize < 0)
+    {
+        infoMessage = "Couldn't read t1x_ban.txt";
+        sendMessageToClient_orServerConsole(clAdmin, infoMessage);
+        return;        
+    }
+    
+    text = file;
+    while (1)
+    {
+        line = text;
+        token = Com_Parse((const char **)&text);
+        if(token.empty())
+            break;
+
+        if(token == ip)
+            found = true;
+
+        Com_SkipRestOfLine((const char **)&text);
+
+        if (found)
+        {
+            memmove((unsigned char *)line, (unsigned char *)text, fileSize - (text - file) + 1);
+            fileSize -= text - line;
+            text = line;
+            break;
+        }
+    }
+
+    printf(file);
+
+    FS_WriteFile("t1x_ban.txt", file, fileSize);
+    FS_FreeFile(file);
+
+    if (found)
+    {
+        infoMessage = "Unbanned IP " + ip;
+        sendMessageToClient_orServerConsole(clAdmin, infoMessage);
+    }
+    else
+    {
+        std::stringstream ss;
+        ss << "IP " << ip << " not found";
+        infoMessage = ss.str();
+        sendMessageToClient_orServerConsole(clAdmin, infoMessage);
+    }
+}
 ////
 //////
 
