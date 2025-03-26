@@ -29,7 +29,6 @@ va_t va;
 
 // See https://github.com/xtnded/codextended/blob/855df4fb01d20f19091d18d46980b5fdfa95a712/src/sv_client.c#L98
 
-customPlayerState_t customPlayerState[MAX_CLIENTS];
 customChallenge_t customChallenge[MAX_CHALLENGES];
 
 cHook *hook_Com_Init;
@@ -113,6 +112,7 @@ void custom_SV_AddOperatorCommands()
     Cmd_AddCommand("ipunban", unban);
     Cmd_AddCommand("meow", meow);
     Cmd_AddCommand("gosha", gosha);
+    Cmd_AddCommand("test", test);
 }
 
 /*void custom_SV_Startup(void)
@@ -508,33 +508,6 @@ void hook_Com_Printf(const char *fmt, ...)
 }
 
 
-/*static void ban()
-{
-    Com_Printf("ban: I HAVE BEEN SUMMONED\n");
-    if (!com_sv_running->integer)
-    {
-        Com_Printf("Server is not running.\n");
-        return;
-    }
-    
-    Com_Printf("Size of svs: %d\n", sizeof(svs));
-    Com_Printf("Size of svs.clients: %d\n", sizeof(svs.clients[0]));
-
-    int i;
-    client_t *clCheck;
-    for (i = 0, clCheck = svs.clients; i < sv_maxclients->integer; i++, clCheck++)
-    {
-        if (clCheck->state > CS_CONNECTED)
-        {
-            Com_Printf("Client %d: %s, Client State: %d\n", i, clCheck->name, clCheck->state);
-            Com_Printf("Client socket: %d\n", clCheck->netchan.sock);
-            Com_Printf("Client IP: %s\n", NET_AdrToString(clCheck->netchan.remoteAddress));
-            Com_Printf("Client last packet time: %d\n", clCheck->lastPacketTime);
-            Com_Printf("Client next snapshot time: %d\n", clCheck->nextSnapshotTime);
-        }
-    }
-    return;
-}//*/
 static void ban()
 {
     if (!com_sv_running->integer)
@@ -557,9 +530,9 @@ static void ban()
     bool useClientnum = false;
     int file;
     bool clAdmin_searched = false;
-    client_t *clToBan;
-    client_t *clAdmin;
-    char ip[16];
+    client_t *clToBan = nullptr;
+    client_t *clAdmin = nullptr;
+    char ip[16] = {0};
     char cleanName[64] = "n/a";
     time_t current_time;
     int duration = -1;
@@ -573,7 +546,7 @@ static void ban()
         std::string argv = Cmd_Argv(i);
         argvList.push_back(argv);
     }
-    
+
     //// Parse and store the parameters
     for (std::size_t i = 0; i < argvList.size(); i++)
     {
@@ -584,12 +557,12 @@ static void ban()
             {
                 // Parse the argument
                 std::string value;
-                for (std::size_t j = i+1; j < argvList.size(); j++)
+                for (std::size_t j = i + 1; j < argvList.size(); j++)
                 {
                     std::string argv_next = argvList[j];
                     if (!isValidBanParameter(argv_next, banParameters))
                     {
-                        if(j != i+1)
+                        if (j != i + 1)
                             value.append(" ");
                         value.append(argv_next);
                     }
@@ -597,14 +570,14 @@ static void ban()
                         break;
                 }
                 // Store the pair
-                if(!value.empty())
+                if (!value.empty())
                     parsedParameters[argv] = value;
 
                 /*
                 Check if got admin client after first storage and only once
                 because it should be passed as first parameter from gsc
                 so you can redirect the error messages since the beginning
-                //*/
+                */
                 if (!clAdmin_searched)
                 {
                     auto adminParam = parsedParameters.find("-a");
@@ -640,7 +613,7 @@ static void ban()
         }
     }
     ////
-    
+
     //// Check the parameters
     // Client number
     if (parsedParameters.find("-n") != parsedParameters.end())
@@ -711,17 +684,17 @@ static void ban()
                 duration = std::stoi(durationParam->second);
             }
         }
-        if(durationParam_lastChar == 'h')
+        if (durationParam_lastChar == 'h')
         {
             duration_drop = durationParam->second + " hour";
-            if(duration > 1)
+            if (duration > 1)
                 duration_drop.append("s");
             duration *= 3600;
         }
-        else if(durationParam_lastChar == 'd')
+        else if (durationParam_lastChar == 'd')
         {
             duration_drop = durationParam->second + " day";
-            if(duration > 1)
+            if (duration > 1)
                 duration_drop.append("s");
             duration *= 86400;
         }
@@ -738,7 +711,7 @@ static void ban()
     // Add duration to drop message after reason
     if (!duration_drop.empty())
     {
-        if(reason_drop.empty())
+        if (reason_drop.empty())
         {
             reason_drop = "Ban duration: " + duration_drop;
         }
@@ -759,9 +732,9 @@ static void ban()
     if (useClientnum)
     {
         clToBan = &svs.clients[std::stoi(parsedParameters.find("-n")->second)];
-        if (!clToBan)
+        if (!clToBan || clToBan->name[0] == '\0' || clToBan->netchan.remoteAddress.type == NA_BAD)
         {
-            infoMessage = "Couldn't find player by num " + parsedParameters.find("-n")->second;
+            infoMessage = "Couldn't find a valid player by num " + parsedParameters.find("-n")->second;
             sendMessageToClient_orServerConsole(clAdmin, infoMessage);
             return;
         }
@@ -781,7 +754,7 @@ static void ban()
         client_t *clCheck;
         for (i = 0, clCheck = svs.clients; i < sv_maxclients->integer; i++, clCheck++)
         {
-            if (clCheck->state > CS_CONNECTED)
+            if (clCheck->state > CS_CONNECTED && clCheck->name[0] != '\0' && clCheck->netchan.remoteAddress.type != NA_BAD)
             {
                 char ip_check[16];
                 snprintf(ip_check, sizeof(ip_check), "%d.%d.%d.%d",
@@ -790,7 +763,7 @@ static void ban()
                     clCheck->netchan.remoteAddress.ip[2],
                     clCheck->netchan.remoteAddress.ip[3]
                 );
-                
+
                 if (!strcmp(ip_check, ip))
                 {
                     clToBan = clCheck;
@@ -799,9 +772,9 @@ static void ban()
             }
         }
     }
-    
+
     auto banInfo = getBanInfoForIp(ip);
-    if(std::get<0>(banInfo) == true) // banned
+    if (std::get<0>(banInfo) == true) // banned
     {
         std::ostringstream oss;
         oss << "This IP (" << ip << ") is already banned";
@@ -809,10 +782,10 @@ static void ban()
         sendMessageToClient_orServerConsole(clAdmin, infoMessage);
         return;
     }
-    
+
     if (clToBan)
         Q_strncpyz(cleanName, clToBan->name, sizeof(cleanName));
-    
+
     // Add IP to ban.txt
     if (FS_FOpenFileByMode("t1x_ban.txt", &file, FS_APPEND) < 0)
     {
@@ -824,12 +797,10 @@ static void ban()
     {
         current_time = time(NULL);
         printf("\"%s\" \"%s\" \"%i\" \"%li\" \"%s\"\r\n", ip, cleanName, duration, current_time, reason_log.c_str());
-        //return;
         char buffer[256];
         int len = snprintf(buffer, sizeof(buffer), "\"%s\" \"%s\" \"%i\" \"%li\" \"%s\"\r\n",
-                   ip, cleanName, duration, current_time, reason_log.c_str());
+                           ip, cleanName, duration, current_time, reason_log.c_str());
         FS_Write(buffer, len, file);
-        //FS_Write(file, "\"%s\" \"%s\" \"%i\" \"%i\" \"%s\"\r\n", ip, cleanName, duration, current_time, reason_log.c_str());
         FS_FCloseFile(file);
     }
 
@@ -839,7 +810,7 @@ static void ban()
         SV_DropClient(clToBan, reason_drop.c_str());
         clToBan->lastPacketTime = svs.time;
     }
-}//*/
+}
 
 static void unban()
 {
@@ -1152,4 +1123,29 @@ void __attribute__ ((constructor)) lib_load(void)
 void __attribute__ ((destructor)) lib_unload(void)
 {
     delete _t1x;
+}
+
+static void test()
+{
+    int num = sv_maxclients->integer;
+    int i;
+    client_t *player;
+    for(i = 0; i < num; i++)
+    {
+        player = &svs.clients[i];
+        printf("---------------------------------------------\n");
+        printf("Player: %s\n", player->name);
+        printf("    ping:                       %d\n", player->ping);
+        printf("    rate:                       %d\n", player->rate);
+        printf("    snapshotMsec:               %d\n", player->snapshotMsec);
+        printf("    pureAuthentic:              %d\n", player->pureAuthentic);
+        printf("    IP:                         %s\n", NET_AdrToString(player->netchan.remoteAddress));
+        printf("    guid:                       %d\n", player->guid);
+        printf("    scriptId:                   %d\n", player->scriptId);
+        printf("    bIsTestClient:              %d\n", player->bIsTestClient);
+        printf("    serverId:                   %d\n", player->serverId);
+        printf("    lastClientCommand:          %d\n", player->lastClientCommand);
+        printf("    lastClientCommandString:    %s\n", player->lastClientCommandString);
+        printf("---------------------------------------------\n");
+    }
 }

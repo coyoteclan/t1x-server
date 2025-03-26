@@ -259,20 +259,6 @@ typedef void *unzFile;
 typedef void (*xfunction_t)();
 typedef void (*xmethod_t)(scr_entref_t);
 
-typedef struct scr_function_s
-{
-    const char *name;
-    xfunction_t call;
-    qboolean developer;
-} scr_function_t;
-
-typedef struct scr_method_s
-{
-    const char *name;
-    xmethod_t call;
-    qboolean developer;
-} scr_method_t;
-
 struct directory_t
 {
     char path[MAX_OSPATH];
@@ -314,55 +300,6 @@ typedef enum
     EV_STANCE_FORCE_STAND = 0x8c,
     // ...
 } entity_event_t;
-
-typedef struct nodetype
-{
-    struct nodetype *left, *right, *parent;
-    struct nodetype *next, *prev;
-    struct nodetype **head;
-    int weight;
-    int symbol;
-} node_t;
-
-typedef struct
-{
-    int blocNode;
-    int blocPtrs;
-    node_t* tree;
-    node_t* lhead;
-    node_t* ltail;
-    node_t* loc[HMAX + 1];
-    node_t** freelist;
-    node_t nodeList[768];
-    node_t* nodePtrs[768];
-} huff_t;
-
-typedef struct
-{
-    huff_t compressor;
-    huff_t decompressor;
-} huffman_t;
-
-typedef struct netField_s
-{
-    char *name;
-    int offset;
-    int bits;
-} netField_t;
-
-typedef struct trace_s
-{
-    float fraction;     // 0x0
-    vec3_t endpos;      // 0x4
-    vec3_t normal;      // 0x10
-    int surfaceFlags;   // 0x1C
-    byte gap0x20[8];
-    uint16_t entityNum; // 0x28
-    uint16_t partName;  // 0x2A
-    byte gap0x2C[2];
-    byte allsolid;      // 0x2E
-    byte startsolid;    // 0x2F
-} trace_t;
 
 typedef struct usercmd_s
 {
@@ -452,17 +389,6 @@ typedef struct objective_s
     int icon;
 } objective_t;
 
-typedef struct hudelem_s
-{
-    byte gap[112];
-} hudelem_t;
-
-typedef struct hudElemState_s
-{
-    hudelem_t current[31];
-    hudelem_t archival[31];
-} hudElemState_t;
-
 typedef enum
 {
     PM_NORMAL = 0x0,
@@ -474,128 +400,6 @@ typedef enum
     PM_DEAD = 0x6,
     PM_DEAD_LINKED = 0x7,
 } pmtype_t;
-
-typedef enum
-{
-    WEAPON_READY = 0x0,
-    WEAPON_RAISING = 0x1,
-    WEAPON_DROPPING = 0x2,
-    WEAPON_FIRING = 0x3,
-    WEAPON_RECHAMBERING = 0x4,
-    WEAPON_RELOADING = 0x5,
-    WEAPON_RELOADING_INTERUPT = 0x6,
-    WEAPON_RELOAD_START = 0x7,
-    WEAPON_RELOAD_START_INTERUPT = 0x8,
-    WEAPON_RELOAD_END = 0x9,
-    WEAPON_MELEE_INIT = 0xA,
-    WEAPON_MELEE_FIRE = 0xB,
-    WEAPONSTATES_NUM = 0xC,
-} weaponstate_t;
-
-typedef struct playerState_s
-{
-    int commandTime;        // 0x0
-    pmtype_t pm_type;       // 0x4
-    int bobCycle;           // 0x8
-    int pm_flags;           // 0xC
-    int pm_time;            // 0x10
-    vec3_t origin;          // [0] = 0x14, [1] = 0x18, [2] = 0x1C
-    vec3_t velocity;        // [0] = 0x20, [1] = 0x24, [2] = 0x28
-    int weaponTime;         // 0x2c
-    int weaponDelay;        // 0x30
-    int grenadeTimeLeft;    // 0x34
-    int iFoliageSoundTime;  // 0x38
-    int gravity;            // 0x3C
-    float leanf;            // 0x40
-    int speed;              // 0x44
-    vec3_t delta_angles;    // [0] = 0x48, [1] = 0x4C, [2] = 0x50
-    int groundEntityNum;    // 0x54
-    vec3_t vLadderVec;      // [0] = 0x58, [1] = 0x5C, [2] = 0x60
-    int jumpTime;           // 0x64
-    float fJumpOriginZ;     // 0x68
-    int legsTimer;          // 0x6C
-    int legsAnim;           // 0x70
-    int torsoTimer;         // 0x74
-    int torsoAnim;          // 0x78
-    int movementDir;        // 0x7C
-    int eFlags;             // 0x80
-    int eventSequence;      // 0x84
-    int events[4];          // 0x88
-    unsigned int eventParms[4]; // 0x98
-    int oldEventSequence;       // 0xA8
-    int clientNum;              // 0xAC
-    unsigned int weapon;        // 0xB0
-    weaponstate_t weaponstate;  // 0xB4
-    float fWeaponPosFrac;       // 0xB8
-    int viewmodelIndex;         // 0xBC
-    vec3_t viewangles;          // 0xC0
-    int viewHeightTarget;       // 0xCC
-    float viewHeightCurrent;    // 0xD0
-    int viewHeightLerpTime;     // 0xD4
-    int viewHeightLerpTarget;   // 0xD8
-    int viewHeightLerpDown;     // 0xDC
-    int viewHeightLerpPosAdj;   // 0xE0
-    int damageEvent;            // 0xe4
-    int damageYaw;              // 0xe8
-    int damagePitch;            // 0xec
-    int damageCount;            // 0xf0
-    int stats[6];               // 0xf4
-    int ammo[MAX_WEAPONS];      // 0x10c
-    int ammoclip[MAX_WEAPONS];  // 0x20c
-    unsigned int weapons[2];    // 0x30c
-    byte weaponslots[8];        // 0x314
-    unsigned int weaponrechamber[2]; // 0x31c
-    vec3_t mins;                // 0x324
-    vec3_t maxs;                // 0x330
-    int proneViewHeight;        // 0x33C
-    int crouchViewHeight;       // 0x340
-    int standViewHeight;        // 0x344
-    int deadViewHeight;         // 0x348
-    float walkSpeedScale;       // 0x34C // ADS
-    float runSpeedScale;        // 0x350
-    float proneSpeedScale;      // 0x354
-    float crouchSpeedScale;     // 0x358
-    float strafeSpeedScale;     // 0x35C
-    float backSpeedScale;       // 0x360
-    byte gap_0x364[4];
-    float proneDirection;       // 0x368
-    float proneDirectionPitch;  // 0x36c
-    float proneTorsoPitch;      // 0x370
-    int viewlocked;             // 0x374
-    int viewlocked_entNum;      // 0x378
-    float friction;             // 0x37C
-    int gunfx;                  // 0x380
-    int serverCursorHint;       // 0x384
-    int serverCursorHintVal;    // 0x388
-    trace_t serverCursorHintTrace; // 0x38C
-    byte gap_0x3BC[4];
-    int iCompassFriendInfo;     // 0x3C0
-    float fTorsoHeight;         // 0x3c4
-    float fTorsoPitch;          // 0x3c8
-    float fWaistPitch;          // 0x3cc
-    int entityEventSequence;    // 0x3D0
-    int weapAnim;               // 0x3d4
-    float aimSpreadScale;       // 0x3d8
-    int shellshockIndex;        // 0x3dc
-    int shellshockTime;         // 0x3e0
-    int shellshockDuration;     // 0x3e4
-    objective_t objective[MAX_OBJECTIVES]; // 0x3E8
-    hudElemState_t hud;         // 0x5A8
-    int ping;                   // 0x20C8
-    int deltaTime;              // 0x20CC
-} playerState_t;
-
-typedef struct
-{
-    playerState_t ps;
-    int num_entities;
-    int num_clients;
-    int first_entity;
-    int first_client;
-    unsigned int messageSent;
-    unsigned int messageAcked;
-    int messageSize;
-} clientSnapshot_t;
 
 /*
 typedef struct client_s
@@ -672,10 +476,19 @@ typedef struct client_s
 {
     clientConnectState_t state; //0x0000
     int sendAsActive; //0x0004
-    char gap1[4]; //0x0008
-    char userinfo[1024]; //0x000c
-    char gap2[67124]; //0x040c
-    void* gentity; //0x10a40
+    const char* dropReason; //0x0008
+    char userinfo[MAX_INFO_STRING]; //0x000c
+    reliableCommands_t reliableCommands[MAX_RELIABLE_COMMANDS];
+    int reliableSequence;
+    int reliableAcknowledge;
+    int reliableSent;
+    int messageAcknowledge;
+    int gamestateMessageNum; // 4187 * 4
+    int challenge; // 4188
+    usercmd_t lastUsercmd; // 4189
+    int lastClientCommand; // 4189 + 6 = 418f
+    char lastClientCommandString[MAX_STRINGLENGTH]; // 4190
+    void* gentity; //0x10a40 TODO: find gentity_s
     char name[32]; //0x10a44
     char downloadName[64]; //0x10A64
     int download; //0x10AA4
@@ -684,11 +497,11 @@ typedef struct client_s
     int downloadClientBlock; //0x10AB0
     int downloadCurrentBlock; //0x10AB4
     int downloadXmitBlock; //0x10AB8
-    unsigned char	*downloadBlocks[MAX_DOWNLOAD_WINDOW]; //0x10ABC
+    unsigned char* downloadBlocks[MAX_DOWNLOAD_WINDOW]; //0x10ABC
     int downloadBlockSize[MAX_DOWNLOAD_WINDOW]; //0x10ADC
     qboolean downloadEOF; //0x10AFC
     int downloadSendTime; //0x10B00
-    int unsure_if_fallback_or_time2; //0x10B04
+    int wwwOk; //int unsure_if_fallback_or_time2; //0x10B04
     char downloadURL[MAX_OSPATH]; //0x10B08
     qboolean downloadingWWW; //0x10c08
     qboolean clientDownloadingWWW; //0x10c0C
@@ -699,13 +512,25 @@ typedef struct client_s
     int lastConnectTime; // 0x10c20
     int nextSnapshotTime; //0x10c24
     qboolean rateDelayed; //0x10c28
-    int timeoutCount; //0x10c2c
-    char gap3[566288]; //0x10AB0
+    int timeoutCount; // 0x430b * 0x4 = 0x10c2c
+    //char gap1[566288]; //0x10AB0
+    byte gap1[0x8a400];
+    int ping; // 0x26c0c * 0x4 = 0x9b030
+    int rate; // 0x26c0d * 0x4 = 0x9b034
+    int snapshotMsec; // 0x9b038
+    int pureAuthentic; // 0x9b03c
     netchan_t netchan; //0x9B040
-    char pad_AB078[60]; //0xAB078
+    int guid; // 0x2ac20 * 0x4 = 0xab080
+    //unsigned short scriptId; // 0x2ac21 * 0x4 = 0xab084
+    unsigned int scriptId; // 0x2ac21 * 0x4 = 0xab084
+    qboolean bIsTestClient; // 0x2ac22 * 0x4 = 0xab088
+    int serverId; // 0x2ac23 * 0x4 = 0xab08c
+    //char pad_AB078[60]; //0xAB078
 } client_t; //*/
 
-#define x sizeof(netchan_t)
+// 0x9B040 + 803C = A307C
+
+//#define x sizeof(netchan_t)
 
 ///*
 typedef struct
@@ -820,32 +645,6 @@ struct leakyBucket_s
 };
 
 #define MAX_ERROR_BUFFER 64
-
-typedef struct customPlayerState_s
-{
-    //// Bots    
-    int botButtons;
-    int botWButtons;
-    int botWeapon;
-    char botForwardMove;
-    char botRightMove;
-    char botUpMove;
-    ////
-    int speed;
-    int gravity;
-    int fps;
-    int frames;
-    uint64_t frameTime;
-    bool overrideJumpHeight;
-    int jumpHeight;
-    int airJumpsAvailable;
-    bool overrideJumpHeight_air;
-    bool sprintActive;
-    bool sprintRequestPending;
-    int sprintTimer;
-    bool noAutoPickup;
-    bool hiddenFromScoreboard;
-} customPlayerState_t;
 
 typedef struct customChallenge_s
 {
