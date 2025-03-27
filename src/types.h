@@ -348,7 +348,7 @@ typedef void netProfileInfo_t;
     netProfileInfo_t *netProfile;
 } netchan_t;//*/
 
-typedef struct {
+/*typedef struct {
     netsrc_t    sock;
 
     int            dropped;            // between last packet and previous
@@ -371,6 +371,22 @@ typedef struct {
     int            unsentFragmentStart;
     int            unsentLength;
     byte        unsentBuffer[MAX_MSGLEN];
+} netchan_t;//*/
+
+typedef struct
+{
+    netsrc_t sock; //0x0000
+	int dropped; //0x0004
+	netadr_t remoteAddress; //0x0008
+	int qport; //0x001C
+	int incomingSequence; //0x0020
+	int outgoingSequence; //0x0024
+	int fragmentSequence; //0x0028
+	int fragmentLength; //0x002C
+	char fragmentBuffer[32768]; //0x0030
+	int unsentFragments; //0x8030
+	int unsentLength; //0x8034
+	char unsentBuffer[32768]; //0x8038
 } netchan_t;
 
 typedef struct
@@ -455,24 +471,25 @@ typedef struct client_s
 
 ///*
 
-/*typedef struct client_s
+typedef struct client_s
 {
-    clientConnectState_t state;
-    //byte gap1[0x10a44];// to try: 0x4291, ... maybe not, 0x10a44 worked
-    //char name[MAX_NAME_LENGTH];
-    //byte gap2[0x1d8];//byte gap[0x1d8]; // 0x10a44 - 0x1086c
-    byte gap[0x26c14];
-    //int lastPacketTime; // at 0x10c1c
-    //byte gap3[0x15ff0];//byte gap[0x15ff4];
-    netchan_t netchan; // at 0x26c10 or 0x9B040 maybe
+    clientConnectState_t state; //0x0000
+    byte gap[0x10a40];
+	char name[MAX_NAME_LENGTH]; //0x10A44
+    //char gap2[566748];
+    char gap2[440];
+    int lastPacketTime; //0x10c1c
+    char gap3[566304];
+	netchan_t netchan; //0x9B040
+	char gap4[60]; //0xAB078*/
     //...
 } client_t;//*/
 
 // guid at 0xab080
 
-//*/
+//
 
-typedef struct client_s
+/*typedef struct client_s
 {
     clientConnectState_t state; //0x0000
     int sendAsActive; //0x0004
@@ -493,10 +510,10 @@ typedef struct client_s
     char downloadName[64]; //0x10A64
     int download; //0x10AA4
     int downloadSize; //0x10AA8
-    int downloadCount; //0x10AAC
+    int downloadCount; //0x10AAC ----
     int downloadClientBlock; //0x10AB0
     int downloadCurrentBlock; //0x10AB4
-    int downloadXmitBlock; //0x10AB8
+    int downloadXmitBlock; //0x10AB8 ----
     unsigned char* downloadBlocks[MAX_DOWNLOAD_WINDOW]; //0x10ABC
     int downloadBlockSize[MAX_DOWNLOAD_WINDOW]; //0x10ADC
     qboolean downloadEOF; //0x10AFC
@@ -522,10 +539,10 @@ typedef struct client_s
     netchan_t netchan; //0x9B040
     int guid; // 0x2ac20 * 0x4 = 0xab080
     //unsigned short scriptId; // 0x2ac21 * 0x4 = 0xab084
-    unsigned int scriptId; // 0x2ac21 * 0x4 = 0xab084
-    qboolean bIsTestClient; // 0x2ac22 * 0x4 = 0xab088
-    int serverId; // 0x2ac23 * 0x4 = 0xab08c
-    //char pad_AB078[60]; //0xAB078
+    //unsigned int scriptId; // 0x2ac21 * 0x4 = 0xab084
+    //qboolean bIsTestClient; // 0x2ac22 * 0x4 = 0xab088
+    //int serverId; // 0x2ac23 * 0x4 = 0xab08c
+    char pad_AB078[56]; //0xAB078
 } client_t; //*/
 
 // 0x9B040 + 803C = A307C

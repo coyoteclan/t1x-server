@@ -112,7 +112,9 @@ void custom_SV_AddOperatorCommands()
     Cmd_AddCommand("ipunban", unban);
     Cmd_AddCommand("meow", meow);
     Cmd_AddCommand("gosha", gosha);
+#ifdef DEBUG
     Cmd_AddCommand("test", test);
+#endif
 }
 
 /*void custom_SV_Startup(void)
@@ -808,7 +810,7 @@ static void ban()
     if (clToBan)
     {
         SV_DropClient(clToBan, reason_drop.c_str());
-        clToBan->lastPacketTime = svs.time;
+        //clToBan->lastPacketTime = svs.time;
     }
 }
 
@@ -983,7 +985,7 @@ static void unban()
         infoMessage = ss.str();
         sendMessageToClient_orServerConsole(clAdmin, infoMessage);
     }
-}
+}//*/
 ////
 //////
 
@@ -1125,7 +1127,7 @@ void __attribute__ ((destructor)) lib_unload(void)
     delete _t1x;
 }
 
-static void test()
+/*static void test()
 {
     int num = sv_maxclients->integer;
     int i;
@@ -1143,9 +1145,38 @@ static void test()
         printf("    guid:                       %d\n", player->guid);
         printf("    scriptId:                   %d\n", player->scriptId);
         printf("    bIsTestClient:              %d\n", player->bIsTestClient);
+        printf("    bIsTestClient (bool):       %d\n", (bool)player->bIsTestClient);
         printf("    serverId:                   %d\n", player->serverId);
         printf("    lastClientCommand:          %d\n", player->lastClientCommand);
         printf("    lastClientCommandString:    %s\n", player->lastClientCommandString);
         printf("---------------------------------------------\n");
     }
+}//*/
+
+#ifdef DEBUG
+static void test()
+{
+    client_t *player;
+    int i;
+    for ( i = 0, player = svs.clients; i < sv_maxclients->integer; i++, player++ )
+	{
+        player = &svs.clients[i];
+        printf("---------------------------------------------\n");
+        printf("Player: %s\n", player->name);
+        //printf("    ping:                       %d\n", player->ping);
+        //printf("    rate:                       %d\n", player->rate);
+        //printf("    snapshotMsec:               %d\n", player->snapshotMsec);
+        //printf("    pureAuthentic:              %d\n", player->pureAuthentic);
+        printf("    lastPacketTime:             %d\n", player->lastPacketTime);
+        printf("    IP:                         %s\n", NET_AdrToString(player->netchan.remoteAddress));
+        //printf("    guid:                       %d\n", player->guid);
+        //printf("    scriptId:                   %d\n", player->scriptId);
+        //printf("    bIsTestClient:              %d\n", player->bIsTestClient);
+        //printf("    bIsTestClient (bool):       %d\n", (bool)player->bIsTestClient);
+        //printf("    serverId:                   %d\n", player->serverId);
+        //printf("    lastClientCommand:          %d\n", player->lastClientCommand);
+        //printf("    lastClientCommandString:    %s\n", player->lastClientCommandString);
+        printf("---------------------------------------------\n");
+	}
 }
+#endif

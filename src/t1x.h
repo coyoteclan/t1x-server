@@ -4,8 +4,13 @@
 
 static void ban();
 static void unban();
-static void test();
 std::tuple<bool, int, int, std::string> getBanInfoForIp(char* ip);
+
+#ifdef DEBUG
+
+static void test();
+
+#endif
 
 // We assume a cdecl calling convention on 32-bit
 
