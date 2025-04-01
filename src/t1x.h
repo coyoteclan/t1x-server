@@ -1,3 +1,5 @@
+#include "jump.h"
+
 #include "shared.h"
 
 #include "hook.h"

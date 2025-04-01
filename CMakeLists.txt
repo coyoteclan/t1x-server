@@ -32,6 +32,7 @@ endif()
 
 # Source files
 set(SOURCES
+    ${CMAKE_SOURCE_DIR}/src/jump.cpp
     ${CMAKE_SOURCE_DIR}/src/hook.cpp
     ${CMAKE_SOURCE_DIR}/src/t1x.cpp
 )

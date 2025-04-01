@@ -6,6 +6,7 @@ cvar_t *fs_game;
 cvar_t *sv_maxclients;
 // VM
 // Custom
+cvar_t *jump_slowdownEnable;
 cvar_t *sv_cracked;
 cvar_t *sv_connectMessage;
 cvar_t *sv_connectMessageChallenges;
@@ -19,6 +20,7 @@ cvar_t *sv_connectMessageChallenges;
 //Com_ParseInt_t Com_ParseInt;
 //Q_strncpyz_t Q_strncpyz;
 va_t va;
+pmove_t *pm;
 ////
 
 //// Callbacks
@@ -34,8 +36,11 @@ customChallenge_t customChallenge[MAX_CHALLENGES];
 cHook *hook_Com_Init;
 cHook *hook_SV_AddOperatorCommands;
 cHook *hook_SV_SpawnServer;
-//cHook *hook_SV_Startup;
 cHook *hook_Sys_LoadDll;
+//cHook *hook_SV_Startup;
+
+//uintptr_t resume_addr_PM_WalkMove;
+//uintptr_t resume_addr_PM_SlideMove;
 
 time_t sys_timeBase = 0; // Base time in seconds
 uint64_t Sys_Milliseconds64(void) // Current time in ms, using sys_timeBase as origin
@@ -85,6 +90,7 @@ void custom_Com_Init(char *commandLine)
     // Register
     Cvar_Get("t1x", "1", CVAR_SERVERINFO);
     // Register and create references
+    jump_slowdownEnable = Cvar_Get("jump_slowdownEnable", "0", CVAR_SYSTEMINFO | CVAR_ARCHIVE);
     sv_cracked = Cvar_Get("sv_cracked", "0", CVAR_ARCHIVE);
     sv_connectMessage = Cvar_Get("sv_connectMessage", "Server is running t1x server extension.", CVAR_ARCHIVE);
     sv_connectMessageChallenges = Cvar_Get("sv_connectMessageChallenges", "1", CVAR_ARCHIVE);
@@ -1052,10 +1058,30 @@ void *custom_Sys_LoadDll(const char *name, char *fqpath, int (**entryPoint)(int,
 
     // Functions
     va = (va_t)dlsym(libHandle, "va");
-    //Q_strncpyz = (Q_strncpyz_t)dlsym(libHandle, "Q_strncpyz");
-    //Com_SkipRestOfLine = (Com_SkipRestOfLine_t)dlsym(libHandle, "Com_SkipRestOfLine");
-    //Com_ParseRestOfLine = (Com_ParseRestOfLine_t)dlsym(libHandle, "Com_ParseRestOfLine");
-    //Com_ParseInt = (Com_ParseInt_t)dlsym(libHandle, "Com_ParseInt");
+    pm = (pmove_t*)dlsym(libHandle, "pm");
+    /*Q_strncpyz = (Q_strncpyz_t)dlsym(libHandle, "Q_strncpyz");
+    Com_SkipRestOfLine = (Com_SkipRestOfLine_t)dlsym(libHandle, "Com_SkipRestOfLine");
+    Com_ParseRestOfLine = (Com_ParseRestOfLine_t)dlsym(libHandle, "Com_ParseRestOfLine");
+    Com_ParseInt = (Com_ParseInt_t)dlsym(libHandle, "Com_ParseInt");//*/
+    
+    // hook address: 00034ba5
+    // resume address: 00034d8e
+    // PM_GetEffectiveStance: 000333e1
+    // hook offset: 000333e1 - 00034ba5 = 17C4
+    // resume offset: 000333e1 - 00034d8e = 19AD
+    //hook_jmp((int)dlsym(libHandle, "PM_GetEffectiveStance") + 0x17C4, (int)hook_PM_WalkMove_Naked);
+    //resume_addr_PM_WalkMove = (uintptr_t)dlsym(libHandle, "PM_GetEffectiveStance") + 0x19AD;
+
+    // hook address: 0003f1db
+    // resume address: 0003f216
+    // PM_SlideMove: 00038d7d
+    // hook offset: 00038d7d - 0003f1db = 645E
+    // resume offset: 00038d7d - 0003f216 = 6499
+    //hook_jmp((int)dlsym(libHandle, "PM_SlideMove") + 0x645E, (int)hook_PM_SlideMove_Naked);
+    //resume_addr_PM_SlideMove = (uintptr_t)dlsym(libHandle, "PM_SlideMove") + 0x6499;
+
+    hook_jmp((int)dlsym(libHandle, "PM_GetEffectiveStance") + 0xAD, (int)custom_Jump_GetLandFactor);
+    hook_jmp((int)dlsym(libHandle, "PM_GetEffectiveStance") + 0x4C, (int)custom_PM_GetReducedFriction);
 
 #if 0
     hook_jmp((int)dlsym(libHandle, "_init") + 0x88C4, (int)custom_PM_CrashLand);
@@ -1090,21 +1116,22 @@ class t1x
         
         hook_call(0x0808a2c9, (int)hook_AuthorizeState);
         hook_call(0x0809466c, (int)hook_SV_DirectConnect);
-        hook_call(0x0808af8f, (int)hook_NET_CompareAdr_maybe);
-        hook_call(0x0805fcb1, (int)hook_Com_Printf);
-        //hook_call(0x0808ad27, (int)hook_NET_OutOfBandPrint);
-        //hook_call(0x0806d8d3, (int)hook_SkipRestOfLine);
 
-        hook_Sys_LoadDll = new cHook(0x080c5fe4, (int)custom_Sys_LoadDll);
+        /*hook_call(0x0808af8f, (int)hook_NET_CompareAdr_maybe);
+        hook_call(0x0805fcb1, (int)hook_Com_Printf);
+        hook_call(0x0808ad27, (int)hook_NET_OutOfBandPrint);
+        hook_call(0x0806d8d3, (int)hook_SkipRestOfLine);//*/
+
+        hook_Sys_LoadDll = new cHook(0x080c9071, (int)custom_Sys_LoadDll);
         hook_Sys_LoadDll->hook();
         hook_Com_Init = new cHook(0x0807154e, (int)custom_Com_Init);
         hook_Com_Init->hook();
         hook_SV_SpawnServer = new cHook(0x8091b72, (int)custom_SV_SpawnServer);
         hook_SV_SpawnServer->hook();
-        //hook_SV_Startup = new cHook(0x08091473, (int)custom_SV_Startup);
-        //hook_SV_Startup->hook();
         hook_SV_AddOperatorCommands = new cHook(0x08089580, (int)custom_SV_AddOperatorCommands);
         hook_SV_AddOperatorCommands->hook();
+        //hook_SV_Startup = new cHook(0x08091473, (int)custom_SV_Startup);
+        //hook_SV_Startup->hook();
 
         printf("Loading complete\n");
         printf("--------------------------------\n");
@@ -1126,32 +1153,6 @@ void __attribute__ ((destructor)) lib_unload(void)
 {
     delete _t1x;
 }
-
-/*static void test()
-{
-    int num = sv_maxclients->integer;
-    int i;
-    client_t *player;
-    for(i = 0; i < num; i++)
-    {
-        player = &svs.clients[i];
-        printf("---------------------------------------------\n");
-        printf("Player: %s\n", player->name);
-        printf("    ping:                       %d\n", player->ping);
-        printf("    rate:                       %d\n", player->rate);
-        printf("    snapshotMsec:               %d\n", player->snapshotMsec);
-        printf("    pureAuthentic:              %d\n", player->pureAuthentic);
-        printf("    IP:                         %s\n", NET_AdrToString(player->netchan.remoteAddress));
-        printf("    guid:                       %d\n", player->guid);
-        printf("    scriptId:                   %d\n", player->scriptId);
-        printf("    bIsTestClient:              %d\n", player->bIsTestClient);
-        printf("    bIsTestClient (bool):       %d\n", (bool)player->bIsTestClient);
-        printf("    serverId:                   %d\n", player->serverId);
-        printf("    lastClientCommand:          %d\n", player->lastClientCommand);
-        printf("    lastClientCommandString:    %s\n", player->lastClientCommandString);
-        printf("---------------------------------------------\n");
-    }
-}//*/
 
 #ifdef DEBUG
 static void test()
