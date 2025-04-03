@@ -122,6 +122,25 @@ enum svc_ops_e
 
 typedef enum
 {
+	ET_GENERAL = 0,
+	ET_PLAYER = 1,
+	ET_PLAYER_CORPSE = 2,
+	ET_ITEM = 3,
+	ET_MISSLE = 4,
+	ET_MOVER = 5,
+	ET_PORTAL = 6,
+	ET_INVISIBLE = 7,
+	ET_SCRIPTMOVER = 8,
+	ET_SOUND_BLEND = 9,
+	ET_LOOP_FX = 10,
+	ET_TURRET = 11,
+	ET_VEHICLE = 12,
+	ET_VEHICLE_COLLMAP = 14,
+	ET_EVENTS = 16,
+} entityType_t;
+
+typedef enum
+{
     TEAM_FREE = 0x0,
     TEAM_NONE = 0x0,
     TEAM_BAD = 0x0,
@@ -259,6 +278,21 @@ typedef void *unzFile;
 typedef void (*xfunction_t)();
 typedef void (*xmethod_t)(scr_entref_t);
 
+typedef struct scr_function_s
+{
+    const char *name;
+    xfunction_t call;
+    qboolean developer;
+} scr_function_t;
+
+typedef struct scr_method_s
+{
+    const char *name;
+    xmethod_t call;
+    qboolean developer;
+} scr_method_t;
+
+
 struct directory_t
 {
     char path[MAX_OSPATH];
@@ -314,6 +348,13 @@ typedef struct usercmd_s
     signed char upmove;
     byte unknown;
 } usercmd_t;
+
+typedef struct callback_s
+{
+    int *pos;
+    const char *name;
+    bool custom;
+} callback_t;
 
 typedef enum
 {
@@ -396,6 +437,31 @@ typedef struct
     int cmdType;
 } reliableCommands_t;
 
+typedef enum
+{
+    TR_STATIONARY,
+	TR_INTERPOLATE,             // non-parametric, but interpolate between snapshots
+	TR_LINEAR,
+	TR_LINEAR_STOP,
+	TR_LINEAR_STOP_BACK,        //----(SA)	added.  so reverse movement can be different than forward
+	TR_SINE,                    // value = base + sin( time / duration ) * delta
+	TR_GRAVITY,
+	TR_GRAVITY_LOW,
+	TR_GRAVITY_FLOAT,           // super low grav with no gravity acceleration (floating feathers/fabric/leaves/...)
+	TR_GRAVITY_PAUSED,          //----(SA)	has stopped, but will still do a short trace to see if it should be switched back to TR_GRAVITY
+	TR_ACCELERATE,
+	TR_DECCELERATE
+} trType_t;
+
+typedef struct
+{
+    trType_t trType;
+	int trTime;
+	int trDuration;             // if non 0, trTime + trDuration = stop time
+	vec3_t trBase;
+	vec3_t trDelta;
+} trajectory_t;
+
 typedef struct objective_s
 {
     int state;
@@ -416,6 +482,142 @@ typedef enum
     PM_DEAD = 0x6,
     PM_DEAD_LINKED = 0x7,
 } pmtype_t;
+
+typedef struct playerState_s
+{
+    //int commandTime;
+    //pmtype_t pm_type;
+    //int bobCycle;
+    char gap1[12];
+    int pm_flags;
+    int pm_time;
+    vec3_t origin;
+    vec3_t velocity;
+    //int weaponTime;         // 0x2c
+    //int weaponDelay;        // 0x30
+    //int grenadeTimeLeft;    // 0x34
+    //int iFoliageSoundTime;  // 0x38
+    //int gravity;            // 0x3C // 20
+    //float leanf;            // 0x40
+    //int speed;              // 0x44 // 28
+    //vec3_t delta_angles;    // [0] = 0x48, [1] = 0x4C, [2] = 0x50 // 40
+    //int groundEntityNum;    // 0x54 // 44
+    //vec3_t vLadderVec;      // [0] = 0x58, [1] = 0x5C, [2] = 0x60 // 56
+    char gap2[56];
+    int jumpTime;
+    float jumpOriginZ;
+    //...
+} playerState_t;
+
+struct pmove_t
+{
+	playerState_t *ps;
+    //...
+};
+
+struct gclient_s
+{
+    int32_t commandTime; //0x0000
+	int32_t pm_type; //0x0004
+	char pad_0008[12]; //0x0008
+	vec3_t origin; //0x0014
+	vec3_t velocity; //0x0020
+	char pad_002C[8]; //0x002C
+	int32_t grenadeTimeLeft; //0x0034
+	char pad_0038[12]; //0x0038
+	float leanf; //0x0044
+	char pad_0048[140]; //0x0048
+	int32_t clientNum; //0x00D4
+	int32_t weapon; //0x00D8
+	char pad_00DC[4]; //0x00DC
+	float aimProgress; //0x00E0
+	char pad_00E4[4]; //0x00E4
+	vec3_t viewangles; //0x00E8
+	int32_t viewheight_i; //0x00F4
+	float viewheight_f; //0x00F8
+	char pad_00FC[4]; //0x00FC
+	int32_t viewheight_i_2; //0x0100
+	int32_t stance_change_dir; //0x0104
+	char pad_0108[28]; //0x0108
+	int32_t maxhealth; //0x0124
+	char pad_0128[1076]; //0x0128
+	vec3_t mins; //0x055C
+	vec3_t maxs; //0x0568
+	int32_t viewheight_prone; //0x0574
+	int32_t viewheight_crouched; //0x0578
+	int32_t viewheight_standing; //0x057C
+	char pad_0580[48]; //0x0580
+	float stamina; //0x05B0
+	char pad_05B4[16448]; //0x05B4
+	char name[32]; //0x45F4
+	char pad_4614[8]; //0x4614
+	int32_t noclip; //0x461C
+	char pad_4620[8]; //0x4620
+	int32_t lastCmdTime; //0x4628
+	int32_t buttons; //0x462C
+	int32_t oldbuttons; //0x4630
+	char pad_4634[28]; //0x4634
+	vec3_t viewangles2; //0x4650
+	char pad_465C[28]; //0x465C
+	int32_t inactivityTime; //0x4678
+	char pad_467C[4]; //0x467C
+	int32_t inactivityWarning; //0x4680
+	char pad_4684[496]; //0x4684
+};
+
+struct gentity_s
+{
+    int32_t number; //0x0000
+	entityType_t eType; //0x0004
+	char pad_0008[4]; //0x0008
+	trajectory_t pos; //0x000C
+	char pad_0030[12]; //0x0030
+	vec3_t viewangles; //0x003C
+	char pad_0048[132]; //0x0048
+	int32_t weapon; //0x00CC
+	char pad_00D0[40]; //0x00D0
+	int32_t svFlags; //0x00F8
+	char pad_00FC[64]; //0x00FC
+	vec3_t currentOrigin; //0x013C
+	char pad_0148[12]; //0x0148
+	int32_t ownerNum; //0x0154
+	int32_t r_eventTime; //0x0158
+	char pad_015C[4]; //0x015C
+	struct gclient_s *client; //0x0160
+	char pad_0164[8]; //0x0164
+	int32_t inuse; //0x016C
+	char pad_0170[20]; //0x0170
+	int32_t classname; //0x0184
+	int32_t spawnflags; //0x0188
+	int32_t flags; //0x018C
+	int32_t eventTime; //0x0190
+	int32_t freeAfterEvent; //0x0194
+	char pad_0198[8]; //0x0198
+	int32_t clipmask; //0x01A0
+	uint32_t frames; //0x01A4
+	struct gentity_s *parent; //0x01A8
+	char pad_01AC[58]; //0x01AC
+	int16_t targetname; //0x01E6
+	char pad_01E8[36]; //0x01E8
+	int32_t nextthink; //0x020C
+	void (*think)(gentity_t* self);
+	void (*reached)(gentity_t* self);
+	void (*blocked)(gentity_t* self, gentity_t* other);
+	void (*touch)(gentity_t* self, gentity_t* other, struct trace_t* trace);
+	void (*use)(gentity_t* self, gentity_t* other, gentity_t* activator);
+	void (*pain)(gentity_t* self, gentity_t* attacker, int damage, vec3_t point);
+	void (*die)(gentity_t* self, gentity_t* inflictor, gentity_t* attacker, int damage, int mod);
+	char pad_022C[20]; //0x022C
+	int32_t health; //0x0240
+	char pad_0244[4]; //0x0244
+	int32_t damage; //0x0248
+	int32_t explosionInnerDamage; //0x024C
+	int32_t explosionOuterDamage; //0x0250
+	int32_t explosionRadius; //0x0254
+	int32_t methodOfDeath; //0x0258
+	int32_t splashMethodOfDeath; //0x025C
+	char pad_0260[236]; //0x0260
+};
 
 /*
 typedef struct client_s
@@ -639,8 +841,22 @@ typedef struct
     //...
 } stringIndex_t;
 
+#define MAX_ERROR_BUFFER 64
+typedef struct src_error_s
+{
+    char internal_function[64];
+    char message[1024];
+} scr_error_t;
+
+extern gentity_t *g_entities;
+
 extern stringIndex_t *scr_const;
 
+// #define scrVmPub (*((scrVmPub_t*)(0x082f57e0)))
+
+#define com_errorEntered (*((int*)(0x084897dc))) // 084897dc
+#define scrVarPub (*((scrVarPub_t*)(0x082f17d8))) // To test
+#define scrVmPub (*((scrVmPub_t*)(0x08433e00))) // To find and test
 #define svs (*((serverStatic_t*)(0x084f7000)))//DAT_084f7000, 0x084886e0
 
 // Require structure sizes to match

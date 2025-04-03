@@ -6,6 +6,9 @@ cvar_t *fs_game;
 cvar_t *sv_maxclients;
 // VM
 // Custom
+cvar_t *fs_callbacks;
+cvar_t *fs_callbacks_additional;
+cvar_t *g_debugCallbacks;
 cvar_t *jump_slowdownEnable;
 cvar_t *sv_cracked;
 cvar_t *sv_connectMessage;
@@ -14,16 +17,83 @@ cvar_t *sv_connectMessageChallenges;
 
 //// Game lib
 // Objects
+gentity_t *g_entities;
+gclient_t *g_clients;
+va_t va;
+pmove_t *pm;
 // Functions
 //Com_SkipRestOfLine_t Com_SkipRestOfLine;
 //Com_ParseRestOfLine_t Com_ParseRestOfLine;
 //Com_ParseInt_t Com_ParseInt;
+
+Q_strlwr_t Q_strlwr;
+Q_strupr_t Q_strupr;
+Q_strcat_t Q_strcat;
 //Q_strncpyz_t Q_strncpyz;
-va_t va;
-pmove_t *pm;
+Q_CleanStr_t Q_CleanStr;
+
+Scr_AddBool_t Scr_AddBool;
+Scr_AddInt_t Scr_AddInt;
+Scr_AddFloat_t Scr_AddFloat;
+Scr_AddString_t Scr_AddString;
+Scr_AddUndefined_t Scr_AddUndefined;
+Scr_AddVector_t Scr_AddVector;
+Scr_MakeArray_t Scr_MakeArray;
+Scr_AddArray_t Scr_AddArray;
+Scr_AddObject_t Scr_AddObject;
+
+Scr_LoadScript_t Scr_LoadScript;
+Scr_ExecThread_t Scr_ExecThread;
+Scr_ExecEntThread_t Scr_ExecEntThread;
+Scr_FreeThread_t Scr_FreeThread;
+Scr_GetFunction_t Scr_GetFunction;
+Scr_GetMethod_t Scr_GetMethod;
+Scr_Error_t Scr_Error;
+Scr_GetFunctionHandle_t Scr_GetFunctionHandle;
+Scr_GetNumParam_t Scr_GetNumParam;
+Scr_IsSystemActive_t Scr_IsSystemActive;
+
+Scr_GetInt_t Scr_GetInt;
+Scr_GetString_t Scr_GetString;
+G_LocalizedStringIndex_t G_LocalizedStringIndex;
+Scr_GetPointerType_t Scr_GetPointerType;
+
+trap_SendServerCommand_t trap_SendServerCommand;
+trap_Argv_t trap_Argv;
+trap_GetConfigstringConst_t trap_GetConfigstringConst;
+trap_GetConfigstring_t trap_GetConfigstring;
+trap_SetConfigstring_t trap_SetConfigstring;
+ClientCommand_t ClientCommand;
 ////
 
 //// Callbacks
+int codecallback_startgametype = 0;
+int codecallback_playerconnect = 0;
+int codecallback_playerdisconnect = 0;
+int codecallback_playerdamage = 0;
+int codecallback_playerkilled = 0;
+int codecallback_client_spam = 0;
+int codecallback_playercommand = 0;
+int codecallback_playerairjump = 0;
+//int codecallback_playercrashland = 0;
+int codecallback_error = 0;
+callback_t callbacks[] =
+{
+    // Stock
+    {&codecallback_startgametype, "CodeCallback_StartGameType", false},
+    {&codecallback_playerconnect, "CodeCallback_PlayerConnect", false},
+    {&codecallback_playerdisconnect, "CodeCallback_PlayerDisconnect", false},
+    {&codecallback_playerdamage, "CodeCallback_PlayerDamage", false},
+    {&codecallback_playerkilled, "CodeCallback_PlayerKilled", false},
+    
+    // Custom
+    {&codecallback_client_spam, "CodeCallback_CLSpam", true},
+    {&codecallback_playercommand, "CodeCallback_PlayerCommand", true},
+    {&codecallback_playerairjump, "CodeCallback_PlayerAirJump", true},
+    //{&codecallback_playercrashland, "CodeCallback_PlayerCrashLand", true},
+    {&codecallback_error, "CodeCallback_Error", true},
+};
+////
 
 //int codecallback_playercrashland = 0;
 
@@ -34,6 +104,7 @@ pmove_t *pm;
 customChallenge_t customChallenge[MAX_CHALLENGES];
 
 cHook *hook_Com_Init;
+cHook *hook_GScr_LoadGameTypeScript;
 cHook *hook_SV_AddOperatorCommands;
 cHook *hook_SV_SpawnServer;
 cHook *hook_Sys_LoadDll;
@@ -90,11 +161,71 @@ void custom_Com_Init(char *commandLine)
     // Register
     Cvar_Get("t1x", "1", CVAR_SERVERINFO);
     // Register and create references
+    fs_callbacks = Cvar_Get("fs_callbacks", "maps/mp/gametypes/_callbacksetup", CVAR_ARCHIVE);
+    fs_callbacks_additional = Cvar_Get("fs_callbacks_additional", "", CVAR_ARCHIVE);
+    g_debugCallbacks = Cvar_Get("g_debugCallbacks", "0", CVAR_ARCHIVE);
     jump_slowdownEnable = Cvar_Get("jump_slowdownEnable", "0", CVAR_SYSTEMINFO | CVAR_ARCHIVE);
     sv_cracked = Cvar_Get("sv_cracked", "0", CVAR_ARCHIVE);
     sv_connectMessage = Cvar_Get("sv_connectMessage", "Server is running t1x server extension.", CVAR_ARCHIVE);
     sv_connectMessageChallenges = Cvar_Get("sv_connectMessageChallenges", "1", CVAR_ARCHIVE);
     ////
+}
+
+static int localizedStringIndex = 128;
+int custom_G_LocalizedStringIndex(const char *string)
+{
+    int i;
+    int start = 1244;
+    char s[MAX_STRINGLENGTH];
+
+    if(localizedStringIndex >= 256)
+        localizedStringIndex = 128;
+
+    if(!string || !*string)
+        return 0;
+
+    for (i = 1; i < 256; i++)
+    {
+        trap_GetConfigstring(start + i, s, sizeof(s));
+        if(!*s)
+            break;
+        if(!strcmp(s, string))
+            return i;
+    }
+
+    if(i == 256)
+        i = localizedStringIndex;
+
+    trap_SetConfigstring(i + 1244, string);
+    localizedStringIndex++;
+    
+    return i;
+}
+
+void custom_GScr_LoadGameTypeScript()
+{
+    hook_GScr_LoadGameTypeScript->unhook();
+    void (*GScr_LoadGameTypeScript)();
+    *(int*)&GScr_LoadGameTypeScript = hook_GScr_LoadGameTypeScript->from;
+    GScr_LoadGameTypeScript();
+    hook_GScr_LoadGameTypeScript->hook();
+
+    unsigned int i;
+    
+    if(*fs_callbacks_additional->string)
+        if(!Scr_LoadScript(fs_callbacks_additional->string))
+            Com_DPrintf("custom_GScr_LoadGameTypeScript: Scr_LoadScript for fs_callbacks_additional failed.\n");
+
+    for (i = 0; i < sizeof(callbacks) / sizeof(callbacks[0]); i++)
+    {
+        if(callbacks[i].custom)
+            *callbacks[i].pos = Scr_GetFunctionHandle(fs_callbacks_additional->string, callbacks[i].name);
+        else
+            *callbacks[i].pos = Scr_GetFunctionHandle(fs_callbacks->string, callbacks[i].name);
+
+        /*if (*callbacks[i].pos && g_debugCallbacks->integer)
+            Com_Printf("%s found @ %p\n", callbacks[i].name, scrVarPub.programBuffer + *callbacks[i].pos);*/ // TODO: verify scrVarPub_t
+    }
 }
 
 void custom_SV_SpawnServer(char *server)
@@ -452,6 +583,49 @@ void hook_SV_DirectConnect(netadr_t from)
     printf("data: %s\n", *data);
     return true;
 }//*/
+
+scr_error_t scr_errors[MAX_ERROR_BUFFER];
+int scr_errors_index = 0;
+void Scr_CodeCallback_Error(qboolean terminal, qboolean emit, const char *internal_function, char *message)
+{
+    if (codecallback_error && Scr_IsSystemActive() && !com_errorEntered)
+    {
+        if (!strncmp(message, "exceeded maximum number of script variables", 43))
+        {
+            /* Since we cannot allocate more script variables, further
+             execution of scripts or script callbacks could lead to an
+             undefined state (in script) or endless error loops, so we stop */
+            Com_Error(ERR_DROP, "\x15%s", "exceeded maximum number of script variables");
+        }
+
+        if (terminal || emit)
+        {
+            Scr_AddString(message);
+            Scr_AddString(internal_function);
+            Scr_AddInt(terminal);
+            short ret = Scr_ExecThread(codecallback_error, 3);
+            Scr_FreeThread(ret);
+        }
+        else
+        {
+            /* If the error is non-critical (not stopping the server), save it
+             so we can emit it later at G_RunFrame which is a rather safe
+             spot compared to if we emit it directly here within the
+             internals of the scripting engine where we risk crashing it
+             with a segmentation fault */
+            if (scr_errors_index < MAX_ERROR_BUFFER)
+            {
+                strncpy(scr_errors[scr_errors_index].internal_function, internal_function, sizeof(scr_errors[scr_errors_index].internal_function));
+                strncpy(scr_errors[scr_errors_index].message, message, sizeof(scr_errors[scr_errors_index].message));
+                scr_errors_index++;
+            }
+            else
+            {
+                printf("Warning: Errors buffer full, not calling CodeCallback_Error for '%s'\n", message);
+            }
+        }
+    }
+}
 
 ////// Custom operator commands
 //// ban & unban
@@ -995,6 +1169,59 @@ static void unban()
 ////
 //////
 
+void hook_ClientCommand(int clientNum)
+{
+    printf("################ hook_ClientCommand\n");
+    if(!Scr_IsSystemActive())
+        return;
+    
+    printf("################ Scr_IsSystemActive = true\n");
+
+    //char* cmd = Cmd_Argv(0);
+
+    /*// [exploit patch] gc
+    if(!strcmp(cmd, "gc"))
+        return;
+
+    // [glitch patch] follow while alive
+    if(!strcmp(cmd, "follownext") || !strcmp(cmd, "followprev")) // Not checking if alive, client doesn't call these commands when clicking as spectator
+        return;//*/
+
+    if (!codecallback_playercommand)
+    {
+        printf("################ !codecallback_playercommand\n");
+        ClientCommand(clientNum);
+        return;
+    }
+    printf("################ codecallback_playercommand\n");
+
+    Scr_MakeArray();
+    int args = Cmd_Argc();
+    for (int i = 0; i < args; i++)
+    {
+        char tmp[MAX_STRINGLENGTH];
+        trap_Argv(i, tmp, sizeof(tmp));
+        if (i == 1 && tmp[0] >= 20 && tmp[0] <= 22)
+        {
+            char *part = strtok(tmp + 1, " ");
+            while (part != NULL)
+            {
+                Scr_AddString(part);
+                Scr_AddArray();
+                part = strtok(NULL, " ");
+            }
+        }
+        else
+        {
+            Scr_AddString(tmp);
+            Scr_AddArray();
+        }
+    }
+    
+    short ret = Scr_ExecEntThread(&g_entities[clientNum], codecallback_playercommand, 1);
+    Scr_FreeThread(ret);
+}
+
 void ServerCrash(int sig)
 {
     int fd;
@@ -1056,13 +1283,59 @@ void *custom_Sys_LoadDll(const char *name, char *fqpath, int (**entryPoint)(int,
     }
     fclose(fp);
 
-    // Functions
+    // Objects
+    g_clients = (gclient_t*)dlsym(libHandle, "g_clients");
+    g_entities = (gentity_t*)dlsym(libHandle, "g_entities");
     va = (va_t)dlsym(libHandle, "va");
     pm = (pmove_t*)dlsym(libHandle, "pm");
+    // Functions
     /*Q_strncpyz = (Q_strncpyz_t)dlsym(libHandle, "Q_strncpyz");
     Com_SkipRestOfLine = (Com_SkipRestOfLine_t)dlsym(libHandle, "Com_SkipRestOfLine");
     Com_ParseRestOfLine = (Com_ParseRestOfLine_t)dlsym(libHandle, "Com_ParseRestOfLine");
     Com_ParseInt = (Com_ParseInt_t)dlsym(libHandle, "Com_ParseInt");//*/
+    
+    //// Script functions
+    // GSC return types
+    Scr_AddBool = (Scr_AddBool_t)dlsym(libHandle, "Scr_AddBool");
+    Scr_AddInt = (Scr_AddInt_t)dlsym(libHandle, "Scr_AddInt");
+    Scr_AddFloat = (Scr_AddFloat_t)dlsym(libHandle, "Scr_AddFloat");
+    Scr_AddString = (Scr_AddString_t)dlsym(libHandle, "Scr_AddString");
+    Scr_AddUndefined = (Scr_AddUndefined_t)dlsym(libHandle, "Scr_AddUndefined");
+    Scr_AddVector = (Scr_AddVector_t)dlsym(libHandle, "Scr_AddVector");
+    Scr_MakeArray = (Scr_MakeArray_t)dlsym(libHandle, "Scr_MakeArray");
+    Scr_AddArray = (Scr_AddArray_t)dlsym(libHandle, "Scr_AddArray");
+    Scr_AddObject = (Scr_AddObject_t)dlsym(libHandle, "Scr_AddObject");
+    
+    Scr_LoadScript = (Scr_LoadScript_t)dlsym(libHandle, "Scr_LoadScript");
+    Scr_ExecThread = (Scr_ExecThread_t)dlsym(libHandle, "Scr_ExecThread");
+    Scr_FreeThread = (Scr_FreeThread_t)dlsym(libHandle, "Scr_FreeThread");
+
+    Scr_ExecEntThread = (Scr_ExecEntThread_t)dlsym(libHandle, "Scr_ExecEntThread");
+    Scr_GetFunction = (Scr_GetFunction_t)dlsym(libHandle, "Scr_GetFunction");
+    Scr_GetMethod = (Scr_GetMethod_t)dlsym(libHandle, "Scr_GetMethod");
+    Scr_Error = (Scr_Error_t)dlsym(libHandle, "Scr_Error");
+    Scr_GetFunctionHandle = (Scr_GetFunctionHandle_t)dlsym(libHandle, "Scr_GetFunctionHandle");
+    Scr_GetNumParam = (Scr_GetNumParam_t)dlsym(libHandle, "Scr_GetNumParam");
+    
+    trap_Argv = (trap_Argv_t)dlsym(libHandle, "trap_Argv");
+    trap_GetConfigstringConst = (trap_GetConfigstringConst_t)dlsym(libHandle, "trap_GetConfigstringConst");
+    trap_GetConfigstring = (trap_GetConfigstring_t)dlsym(libHandle, "trap_GetConfigstring");
+    trap_SetConfigstring = (trap_SetConfigstring_t)dlsym(libHandle, "trap_SetConfigstring");
+
+    trap_SendServerCommand = (trap_SendServerCommand_t)dlsym(libHandle, "trap_SendServerCommand");
+    ClientCommand = (ClientCommand_t)dlsym(libHandle, "ClientCommand");
+    Scr_IsSystemActive = (Scr_IsSystemActive_t)dlsym(libHandle, "Scr_IsSystemActive");
+
+    Q_strlwr = (Q_strlwr_t)dlsym(libHandle, "Q_strlwr");
+    Q_strupr = (Q_strupr_t)dlsym(libHandle, "Q_strupr");
+    Q_strcat = (Q_strcat_t)dlsym(libHandle, "Q_strcat");
+    Q_CleanStr = (Q_CleanStr_t)dlsym(libHandle, "Q_CleanStr");
+
+    Scr_GetInt = (Scr_GetInt_t)dlsym(libHandle, "Scr_GetInt");
+    Scr_GetString = (Scr_GetString_t)dlsym(libHandle, "Scr_GetString");
+    G_LocalizedStringIndex = (G_LocalizedStringIndex_t)dlsym(libHandle, "G_LocalizedStringIndex");
+    Scr_GetPointerType = (Scr_GetPointerType_t)dlsym(libHandle, "Scr_GetPointerType");
+    ////
     
     // hook address: 00034ba5
     // resume address: 00034d8e
@@ -1080,8 +1353,15 @@ void *custom_Sys_LoadDll(const char *name, char *fqpath, int (**entryPoint)(int,
     //hook_jmp((int)dlsym(libHandle, "PM_SlideMove") + 0x645E, (int)hook_PM_SlideMove_Naked);
     //resume_addr_PM_SlideMove = (uintptr_t)dlsym(libHandle, "PM_SlideMove") + 0x6499;
 
+    hook_call((int)dlsym(libHandle, "vmMain") + 0xF0, (int)hook_ClientCommand);
+
+    hook_jmp((int)dlsym(libHandle, "G_LocalizedStringIndex"), (int)custom_G_LocalizedStringIndex);
+
     hook_jmp((int)dlsym(libHandle, "PM_GetEffectiveStance") + 0xAD, (int)custom_Jump_GetLandFactor);
     hook_jmp((int)dlsym(libHandle, "PM_GetEffectiveStance") + 0x4C, (int)custom_PM_GetReducedFriction);
+
+    hook_GScr_LoadGameTypeScript = new cHook((int)dlsym(libHandle, "GScr_LoadGameTypeScript"), (int)custom_GScr_LoadGameTypeScript);
+    hook_GScr_LoadGameTypeScript->hook();
 
 #if 0
     hook_jmp((int)dlsym(libHandle, "_init") + 0x88C4, (int)custom_PM_CrashLand);
@@ -1114,6 +1394,8 @@ class t1x
         mprotect((void *)0x08048000, 0x135000, PROT_READ | PROT_WRITE | PROT_EXEC);
         printf("Allow to write in executable memory\n");
         
+        hook_call(0x0809e8ed, (int)Scr_GetCustomFunction);
+        hook_call(0x0809eb29, (int)Scr_GetCustomMethod);
         hook_call(0x0808a2c9, (int)hook_AuthorizeState);
         hook_call(0x0809466c, (int)hook_SV_DirectConnect);
 
@@ -1157,7 +1439,7 @@ void __attribute__ ((destructor)) lib_unload(void)
 #ifdef DEBUG
 static void test()
 {
-    client_t *player;
+    /*client_t *player;
     int i;
     for ( i = 0, player = svs.clients; i < sv_maxclients->integer; i++, player++ )
 	{
@@ -1178,6 +1460,11 @@ static void test()
         //printf("    lastClientCommand:          %d\n", player->lastClientCommand);
         //printf("    lastClientCommandString:    %s\n", player->lastClientCommandString);
         printf("---------------------------------------------\n");
-	}
+	}//*/
+    printf("programBuffer: %s\n", scrVarPub.programBuffer);
+    printf("levelId: %d\n", scrVarPub.levelId);
+    printf("fieldBuffer: %s\n", scrVarPub.fieldBuffer);
+
+    printf("localVars: %n\n", scrVmPub.localVars);
 }
 #endif

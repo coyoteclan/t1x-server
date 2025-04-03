@@ -19,7 +19,7 @@ typedef qboolean (*Sys_IsLANAddress_t)(netadr_t adr);
 static const Sys_IsLANAddress_t Sys_IsLANAddress = (Sys_IsLANAddress_t)0x080c72f8;
 
 typedef char* (*SL_ConvertToString_t)(unsigned int index);
-static const SL_ConvertToString_t SL_ConvertToString = (SL_ConvertToString_t)0x0809cac4;
+static const SL_ConvertToString_t SL_ConvertToString = (SL_ConvertToString_t)0x080a4458;
 
 typedef short (*BigShort_t)(short l);
 static const BigShort_t BigShort = (BigShort_t)0x08083460;
@@ -57,6 +57,9 @@ static const Com_Printf_t Com_Printf = (Com_Printf_t)0x08070248;
 
 typedef void (*Com_DPrintf_t)(const char *format, ...);
 static const Com_DPrintf_t Com_DPrintf = (Com_DPrintf_t)0x08070297;
+
+typedef void (*Com_PrintMessage_t)(int channel, const char *message);
+static const Com_PrintMessage_t Com_PrintMessage = (Com_PrintMessage_t)0x0806fe5f;
 
 typedef void (*Com_Error_t)(errorParm_t code, const char *format, ...);
 static const Com_Error_t Com_Error = (Com_Error_t)0x080704ac;
@@ -113,6 +116,9 @@ static const FS_WriteFile_t FS_WriteFile = (FS_WriteFile_t)0x0806323f;
 //// G
 //typedef void (*G_Say_t)(gentity_s *ent, gentity_s *target, int mode, const char *chatText);
 //extern G_Say_t G_Say;
+
+typedef int (*G_LocalizedStringIndex_t)(const char *string);
+extern G_LocalizedStringIndex_t G_LocalizedStringIndex;
 
 ////
 
@@ -179,11 +185,75 @@ static const Q_strncpyz_t Q_strncpyz = (Q_strncpyz_t)0x0808691a;
 
 typedef void (*Q_CleanStr_t)(char *string);
 
-typedef int (*Q_stricmp_t)(const char *s1, const char *s2);
-static const Q_stricmp_t Q_stricmp = (Q_stricmp_t)0x080830e8;
+//typedef int (*Q_stricmp_t)(const char *s1, const char *s2);
+//static const Q_stricmp_t Q_stricmp = (Q_stricmp_t)0x0;//0x080830e8;
 ////
 
 //// Scr
+
+typedef xfunction_t (*Scr_GetFunction_t)(const char** v_functionName, qboolean *v_developer);
+extern Scr_GetFunction_t Scr_GetFunction;
+
+typedef xmethod_t (*Scr_GetMethod_t)(const char** v_methodName, qboolean *v_developer);
+extern Scr_GetMethod_t Scr_GetMethod;
+
+typedef void (*Scr_Error_t)(const char *string);
+extern Scr_Error_t Scr_Error;
+
+typedef short (*Scr_ExecThread_t)(int callbackHook, unsigned int numArgs);
+extern Scr_ExecThread_t Scr_ExecThread;
+
+typedef short (*Scr_FreeThread_t)(short thread_id);
+extern Scr_FreeThread_t Scr_FreeThread;
+
+typedef short (*Scr_ExecEntThread_t)(gentity_t* ent, int callbackHook, unsigned int numArgs);
+extern Scr_ExecEntThread_t Scr_ExecEntThread;
+
+typedef void (*Scr_AddBool_t)(qboolean value);
+extern Scr_AddBool_t Scr_AddBool;
+
+typedef void (*Scr_AddInt_t)(int value);
+extern Scr_AddInt_t Scr_AddInt;
+
+typedef void (*Scr_AddFloat_t)(float value);
+extern Scr_AddFloat_t Scr_AddFloat;
+
+typedef void (*Scr_AddString_t)(const char *string);
+extern Scr_AddString_t Scr_AddString;
+
+typedef void (*Scr_AddUndefined_t)(void);
+extern Scr_AddUndefined_t Scr_AddUndefined;
+
+typedef void (*Scr_AddVector_t)(vec3_t vec);
+extern Scr_AddVector_t Scr_AddVector;
+
+typedef void (*Scr_MakeArray_t)(void);
+extern Scr_MakeArray_t Scr_MakeArray;
+
+typedef void (*Scr_AddArray_t)(void);
+extern Scr_AddArray_t Scr_AddArray;
+
+typedef void (*Scr_AddObject_t)(unsigned int object);
+extern Scr_AddObject_t Scr_AddObject;
+
+typedef unsigned int (*Scr_LoadScript_t)(const char *filename);
+
+typedef int (*Scr_GetFunctionHandle_t)(const char* scriptName, const char* labelName);
+
+typedef int (*Scr_GetInt_t)(unsigned int param);
+extern Scr_GetInt_t Scr_GetInt;
+
+typedef const char* (*Scr_GetString_t)(unsigned int param);
+extern Scr_GetString_t Scr_GetString;
+
+typedef int (*Scr_GetNumParam_t)(void);
+extern Scr_GetNumParam_t Scr_GetNumParam;
+
+typedef int (*Scr_IsSystemActive_t)();
+extern Scr_IsSystemActive_t Scr_IsSystemActive;
+
+typedef int (*Scr_GetPointerType_t)(unsigned int param);
+extern Scr_GetPointerType_t Scr_GetPointerType;
 
 ////
 
@@ -201,6 +271,9 @@ static const SV_AuthorizeIpPacket_t SV_AuthorizeIpPacket = (SV_AuthorizeIpPacket
 typedef void (*SV_DirectConnect_t)(netadr_t from);
 static const SV_DirectConnect_t SV_DirectConnect = (SV_DirectConnect_t)0x0808ac82;
 
+typedef void (*SV_ConnectionlessPacket_t)(netadr_t from, msg_t *msg);
+static const SV_ConnectionlessPacket_t SV_ConnectionlessPacket = (SV_ConnectionlessPacket_t)0x0;
+
 typedef void (*SV_SendServerCommand_t)(client_t *cl, int type, const char *fmt, ...);
 static const SV_SendServerCommand_t SV_SendServerCommand = (SV_SendServerCommand_t)0x08092f86;
 
@@ -214,5 +287,19 @@ static const SV_DropClient_t SV_DropClient = (SV_DropClient_t)0x0808ba15;
 ////
 
 //// trap
+
+typedef void (*trap_SendServerCommand_t)(int clientnum, svscmd_type type, const char *text);
+extern trap_SendServerCommand_t trap_SendServerCommand;
+
+typedef void (*trap_Argv_t)(int arg, char *buffer, int bufferLength);
+
+typedef const char* (*trap_GetConfigstringConst_t)(int index);
+extern trap_GetConfigstringConst_t trap_GetConfigstringConst;
+
+typedef void (*trap_GetConfigstring_t)(int index, char *buffer, int bufferSize);
+extern trap_GetConfigstring_t trap_GetConfigstring;
+
+typedef void (*trap_SetConfigstring_t)(int index, const char *val);
+extern trap_SetConfigstring_t trap_SetConfigstring;
 
 ////

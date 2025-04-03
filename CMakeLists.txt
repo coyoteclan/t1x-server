@@ -14,9 +14,15 @@ set(CMAKE_LIBRARY_PATH "/lib32" "/usr/lib32" "/usr/lib/i386-linux-gnu" ${CMAKE_L
 
 # Options
 option(DEBUG_BUILD "Include debug info, no optimization" OFF)
+option(ENABLE_UNSAFE "Enable risky features (fread, fwrite...)" OFF)
+option(COMPILE_SSL "SSL support" OFF)
+option(COMPILE_CURL "cURL support" OFF)
 
 message(STATUS "${SEPARATOR}")
 message(STATUS "Debug: ${DEBUG_BUILD}")
+message(STATUS "Risky features: ${ENABLE_UNSAFE}")
+message(STATUS "SSL: ${COMPILE_SSL}")
+message(STATUS "cURL: ${COMPILE_CURL}")
 message(STATUS "${SEPARATOR}")
 
 # -g:       Include debug info
@@ -30,8 +36,49 @@ else()
     #set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O2")
 endif()
 
+if(ENABLE_UNSAFE)
+    add_definitions(-DENABLE_UNSAFE=1)
+else()
+    add_definitions(-DENABLE_UNSAFE=0)
+endif()
+
+if(COMPILE_SQLITE)
+    find_library(SQLITE_LIB sqlite3)
+    if(SQLITE_LIB)
+        add_definitions(-DCOMPILE_SQLITE=1)
+        set(SQLITE_FOUND TRUE)
+    else()
+        message(FATAL_ERROR "SQLite requested but library not found.")
+    endif()
+else()
+    add_definitions(-DCOMPILE_SQLITE=0)
+endif()
+
+if(COMPILE_CURL)
+    find_library(CURL_LIB curl)
+    if(CURL_LIB)
+        add_definitions(-DCOMPILE_CURL=1)
+        set(CURL_FOUND TRUE)
+    else()
+        message(FATAL_ERROR "cURL requested but library not found.")
+    endif()
+else()
+    add_definitions(-DCOMPILE_CURL=0)
+endif()
+
+if(COMPILE_SSL)
+    add_definitions(-DCOMPILE_SSL=1)
+    find_package(OpenSSL REQUIRED)
+else()
+    add_definitions(-DCOMPILE_SSL=0)
+endif()
+
 # Source files
 set(SOURCES
+    ${CMAKE_SOURCE_DIR}/src/gsc/gsc.cpp
+    ${CMAKE_SOURCE_DIR}/src/gsc/gsc_curl.cpp
+    ${CMAKE_SOURCE_DIR}/src/gsc/gsc_player.cpp
+    ${CMAKE_SOURCE_DIR}/src/gsc/gsc_utils.cpp
     ${CMAKE_SOURCE_DIR}/src/jump.cpp
     ${CMAKE_SOURCE_DIR}/src/hook.cpp
     ${CMAKE_SOURCE_DIR}/src/t1x.cpp
