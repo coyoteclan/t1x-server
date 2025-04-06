@@ -470,7 +470,7 @@ void gsc_utils_makelocalizedstring()
 
     var = &scrVmPub.top[-param];
     var->type = STACK_LOCALIZED_STRING;
-}
+}//*/
 
 void gsc_utils_getlocalizedstringindex()
 {
@@ -507,6 +507,7 @@ void gsc_utils_makeupdatedlocalizedstring()
 
     var = &scrVmPub.top[-param];
     var->type = STACK_LOCALIZED_STRING;
+    printf("gsc_utils_makeupdatedlocalizedstring() str: %s, %d\n", str, index);
 }//*/
 
 void gsc_utils_ban()

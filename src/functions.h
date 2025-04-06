@@ -31,6 +31,19 @@ typedef void (*ClientCommand_t)(int clientNum);
 extern ClientCommand_t ClientCommand;
 
 //// BG
+
+typedef int (*BG_GetNumWeapons_t)(void);
+extern BG_GetNumWeapons_t BG_GetNumWeapons;
+
+typedef weaponinfo_t* (*BG_GetInfoForWeapon_t)(unsigned int weaponIndex);
+extern BG_GetInfoForWeapon_t BG_GetInfoForWeapon;
+
+typedef int (*BG_GetWeaponIndexForName_t)(const char *name);
+extern BG_GetWeaponIndexForName_t BG_GetWeaponIndexForName;
+
+typedef int (*BG_AnimationIndexForString_t)(char *src);
+extern BG_AnimationIndexForString_t BG_AnimationIndexForString;
+
 ////
 
 //// Cmd
@@ -271,8 +284,11 @@ static const SV_AuthorizeIpPacket_t SV_AuthorizeIpPacket = (SV_AuthorizeIpPacket
 typedef void (*SV_DirectConnect_t)(netadr_t from);
 static const SV_DirectConnect_t SV_DirectConnect = (SV_DirectConnect_t)0x0808ac82;
 
+typedef playerState_t* (*SV_GameClientNum_t)(int num);
+static const SV_GameClientNum_t SV_GameClientNum = (SV_GameClientNum_t)0x0808e105;
+
 typedef void (*SV_ConnectionlessPacket_t)(netadr_t from, msg_t *msg);
-static const SV_ConnectionlessPacket_t SV_ConnectionlessPacket = (SV_ConnectionlessPacket_t)0x0;
+static const SV_ConnectionlessPacket_t SV_ConnectionlessPacket = (SV_ConnectionlessPacket_t)0x080942cb;
 
 typedef void (*SV_SendServerCommand_t)(client_t *cl, int type, const char *fmt, ...);
 static const SV_SendServerCommand_t SV_SendServerCommand = (SV_SendServerCommand_t)0x08092f86;
@@ -283,6 +299,12 @@ static const SV_DropClient_t SV_DropClient = (SV_DropClient_t)0x0808ba15;
 ////
 
 //// SVC
+
+typedef void (*SVC_Info_t)(netadr_t from);
+static const SVC_Info_t SVC_Info = (SVC_Info_t)0x0809392e;//0x0808c1ac;
+
+typedef void (*SVC_Status_t)(netadr_t from);
+static const SVC_Status_t SVC_Status = (SVC_Status_t)0x08093316;//0x0808bd58;
 
 ////
 

@@ -64,6 +64,10 @@ trap_GetConfigstringConst_t trap_GetConfigstringConst;
 trap_GetConfigstring_t trap_GetConfigstring;
 trap_SetConfigstring_t trap_SetConfigstring;
 ClientCommand_t ClientCommand;
+
+BG_GetNumWeapons_t BG_GetNumWeapons;
+BG_GetInfoForWeapon_t BG_GetInfoForWeapon;
+BG_GetWeaponIndexForName_t BG_GetWeaponIndexForName;
 ////
 
 //// Callbacks
@@ -109,6 +113,14 @@ cHook *hook_SV_AddOperatorCommands;
 cHook *hook_SV_SpawnServer;
 cHook *hook_Sys_LoadDll;
 //cHook *hook_SV_Startup;
+
+/*void hook_GetConfigstringConst(int index)
+{
+
+    printf("custom_GetConfigstringConst called with string: %d\n", index);
+    const char *string = trap_GetConfigstringConst(index);
+    printf("custom_GetConfigstringConst string: %s\n", string);
+}//*/
 
 //uintptr_t resume_addr_PM_WalkMove;
 //uintptr_t resume_addr_PM_SlideMove;
@@ -172,33 +184,67 @@ void custom_Com_Init(char *commandLine)
 }
 
 static int localizedStringIndex = 128;
+// Auto precache strings
 int custom_G_LocalizedStringIndex(const char *string)
 {
+    //printf("[DEBUG] custom_G_LocalizedStringIndex called with string: %s\n", string);
+
     int i;
-    int start = 1244;
+    int start = 1397;
     char s[MAX_STRINGLENGTH];
 
-    if(localizedStringIndex >= 256)
-        localizedStringIndex = 128;
+    //printf("[DEBUG] Initial localizedStringIndex: %d\n", localizedStringIndex);
 
-    if(!string || !*string)
-        return 0;
-
-    for (i = 1; i < 256; i++)
+    // Reset localizedStringIndex if it exceeds the limit
+    if (localizedStringIndex >= 256)
     {
-        trap_GetConfigstring(start + i, s, sizeof(s));
-        if(!*s)
-            break;
-        if(!strcmp(s, string))
-            return i;
+        //printf("[DEBUG] localizedStringIndex exceeded 256, resetting to 128\n");
+        localizedStringIndex = 128;
     }
 
-    if(i == 256)
-        i = localizedStringIndex;
+    // Check if the input string is null or empty
+    if (!string || !*string)
+    {
+        //printf("[DEBUG] Input string is null or empty, returning 0\n");
+        return 0;
+    }
 
-    trap_SetConfigstring(i + 1244, string);
+    // Iterate through config strings to find a match
+    for (i = 1; i < 256; i++)
+    {
+        //printf("[DEBUG] Checking config string at index: %d\n", start + i);
+        trap_GetConfigstring(start + i, s, sizeof(s));
+
+        if (!*s)
+        {
+            //printf("[DEBUG] Empty config string found at index: %d\n", start + i);
+            break;
+        }
+
+        if (!strcmp(s, string))
+        {
+            //printf("[DEBUG] Match found for string '%s' at index: %d\n", string, i);
+            return i;
+        }
+    }
+
+    // Handle case where no match is found
+    if (i == 256)
+    {
+        //printf("[DEBUG] No empty slot found, using localizedStringIndex: %d\n", localizedStringIndex);
+        i = localizedStringIndex;
+    }
+
+    // Set the new config string
+    //printf("[DEBUG] Setting config string at index: %d with value: %s\n", i + 1397, string);
+    trap_SetConfigstring(i + 1397, string);
+
+    // Increment localizedStringIndex
     localizedStringIndex++;
-    
+    //printf("[DEBUG] Incremented localizedStringIndex to: %d\n", localizedStringIndex);
+
+    // Return the index of the localized string
+    //printf("[DEBUG] Returning index: %d\n", i);
     return i;
 }
 
@@ -385,6 +431,19 @@ bool SVC_RateLimitAddress(netadr_t from, int burst, int period)
     return SVC_RateLimit(bucket, burst, period);
 }
 
+bool SVC_callback(const char *str, const char *ip)
+{
+    if (codecallback_client_spam && Scr_IsSystemActive())
+    {
+        Scr_AddString(ip);
+        Scr_AddString(str);
+        short ret = Scr_ExecThread(codecallback_client_spam, 2);
+        Scr_FreeThread(ret);
+        return true;
+    }
+    return false;
+}
+
 void dumpServerStatic() {
     printf("svs at: %p\n", &svs);
     //printf("initialized: %d\n", svs.initialized);
@@ -397,7 +456,7 @@ void dumpServerStatic() {
 }
 
 // Our hooking function
-bool hook_NET_CompareAdr_maybe(
+/*bool hook_NET_CompareAdr_maybe(
     uint32_t fa1, uint32_t fa2, uint32_t fa3, uint32_t fa4, uint32_t fa5,
     uint32_t ta1, uint32_t ta2, uint32_t ta3, uint32_t ta4, uint32_t ta5
 )
@@ -575,6 +634,48 @@ void hook_SV_DirectConnect(netadr_t from)
     }
     
     SV_DirectConnect(from);
+}
+
+void hook_SV_AuthorizeIpPacket(netadr_t from)
+{
+    // Prevent ipAuthorize log spam DoS
+    if (SVC_RateLimitAddress(from, 20, 1000))
+    {
+        Com_DPrintf("SV_AuthorizeIpPacket: rate limit from %s exceeded, dropping request\n", NET_AdrToString(from));
+        return;
+    }
+
+    // Allow ipAuthorize to be DoSed relatively easily, but prevent
+    // excess outbound bandwidth usage when being flooded inbound
+    if (SVC_RateLimit(&outboundLeakyBucket, 10, 100))
+    {
+        Com_DPrintf("SV_AuthorizeIpPacket: rate limit exceeded, dropping request\n");
+        return;
+    }
+
+    SV_AuthorizeIpPacket(from);
+}
+
+void hook_SVC_Info(netadr_t from)
+{
+    // Prevent using getinfo as an amplifier
+    if (SVC_RateLimitAddress(from, 10, 1000))
+    {
+        if (!SVC_callback("INFO:ADDRESS", NET_AdrToString(from)))
+            Com_DPrintf("SVC_Info: rate limit from %s exceeded, dropping request\n", NET_AdrToString(from));
+        return;
+    }
+
+    // Allow getinfo to be DoSed relatively easily, but prevent
+    // excess outbound bandwidth usage when being flooded inbound
+    if (SVC_RateLimit(&outboundLeakyBucket, 10, 100))
+    {
+        if(!SVC_callback("INFO:GLOBAL", NET_AdrToString(from)))
+            Com_DPrintf("SVC_Info: rate limit exceeded, dropping request\n");
+        return;
+    }
+
+    SVC_Info(from);
 }
 
 /*bool hook_SkipRestOfLine( const char *( *data ) )
@@ -1171,11 +1272,8 @@ static void unban()
 
 void hook_ClientCommand(int clientNum)
 {
-    printf("################ hook_ClientCommand\n");
     if(!Scr_IsSystemActive())
         return;
-    
-    printf("################ Scr_IsSystemActive = true\n");
 
     //char* cmd = Cmd_Argv(0);
 
@@ -1189,11 +1287,9 @@ void hook_ClientCommand(int clientNum)
 
     if (!codecallback_playercommand)
     {
-        printf("################ !codecallback_playercommand\n");
         ClientCommand(clientNum);
         return;
     }
-    printf("################ codecallback_playercommand\n");
 
     Scr_MakeArray();
     int args = Cmd_Argc();
@@ -1322,6 +1418,10 @@ void *custom_Sys_LoadDll(const char *name, char *fqpath, int (**entryPoint)(int,
     trap_GetConfigstring = (trap_GetConfigstring_t)dlsym(libHandle, "trap_GetConfigstring");
     trap_SetConfigstring = (trap_SetConfigstring_t)dlsym(libHandle, "trap_SetConfigstring");
 
+    BG_GetNumWeapons = (BG_GetNumWeapons_t)dlsym(libHandle, "BG_GetNumWeapons");
+    BG_GetInfoForWeapon = (BG_GetInfoForWeapon_t)dlsym(libHandle, "BG_GetInfoForWeapon");
+    BG_GetWeaponIndexForName = (BG_GetWeaponIndexForName_t)dlsym(libHandle, "BG_GetWeaponIndexForName");
+
     trap_SendServerCommand = (trap_SendServerCommand_t)dlsym(libHandle, "trap_SendServerCommand");
     ClientCommand = (ClientCommand_t)dlsym(libHandle, "ClientCommand");
     Scr_IsSystemActive = (Scr_IsSystemActive_t)dlsym(libHandle, "Scr_IsSystemActive");
@@ -1354,6 +1454,7 @@ void *custom_Sys_LoadDll(const char *name, char *fqpath, int (**entryPoint)(int,
     //resume_addr_PM_SlideMove = (uintptr_t)dlsym(libHandle, "PM_SlideMove") + 0x6499;
 
     hook_call((int)dlsym(libHandle, "vmMain") + 0xF0, (int)hook_ClientCommand);
+    //hook_call((int)dlsym(libHandle, "G_FindConfigstringIndex") + 0x46, (int)hook_GetConfigstringConst);
 
     hook_jmp((int)dlsym(libHandle, "G_LocalizedStringIndex"), (int)custom_G_LocalizedStringIndex);
 
@@ -1398,6 +1499,8 @@ class t1x
         hook_call(0x0809eb29, (int)Scr_GetCustomMethod);
         hook_call(0x0808a2c9, (int)hook_AuthorizeState);
         hook_call(0x0809466c, (int)hook_SV_DirectConnect);
+        hook_call(0x080946af, (int)hook_SV_AuthorizeIpPacket);
+        hook_call(0x0809456f, (int)hook_SVC_Info);
 
         /*hook_call(0x0808af8f, (int)hook_NET_CompareAdr_maybe);
         hook_call(0x0805fcb1, (int)hook_Com_Printf);

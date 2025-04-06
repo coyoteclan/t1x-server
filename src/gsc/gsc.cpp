@@ -69,9 +69,9 @@ scr_function_t scriptFunctions[] =
     {"getSystemTime", gsc_utils_getsystemtime, 0},
     {"strftime", gsc_utils_strftime, 0},
     {"getConfigString", gsc_utils_getconfigstring, 0},
-    //{"makeLocalizedString", gsc_utils_makelocalizedstring, 0},
-    //{"getLocalizedStringIndex", gsc_utils_getlocalizedstringindex, 0},
-    //{"makeUpdatedLocalizedString", gsc_utils_makeupdatedlocalizedstring, 0},
+    {"makeLocalizedString", gsc_utils_makelocalizedstring, 0},
+    {"getLocalizedStringIndex", gsc_utils_getlocalizedstringindex, 0},
+    {"makeUpdatedLocalizedString", gsc_utils_makeupdatedlocalizedstring, 0},
     {"ban", gsc_utils_ban, 0},
     {"unban", gsc_utils_unban, 0},
     {"strip", gsc_utils_strip, 0},
@@ -80,8 +80,10 @@ scr_function_t scriptFunctions[] =
     {"getType", gsc_utils_gettype, 0},
 
     // Weapons
-    //{"setWeaponCookable", gsc_weapons_setweaponcookable, 0},
-    //{"setWeaponFuseTime", gsc_weapons_setweaponfusetime, 0},//*/
+    {"getWeaponStrProperty", gsc_weapons_getweaponstrproperty, 0},
+    {"setWeaponStrProperty", gsc_weapons_setweaponstrproperty, 0},
+    {"getWeaponIntProperty", gsc_weapons_getweaponintproperty, 0},
+    {"setWeaponIntProperty", gsc_weapons_setweaponintproperty, 0},
     //
 
 #if COMPILE_SQLITE == 1
@@ -312,7 +314,7 @@ int stackGetParamFunction(int param, int *value)
 
 int stackGetParamString(int param, char **value)
 {
-    printf("######### stackGetParamString: %d, %s\n", param, (char *)value);
+    //printf("######### stackGetParamString: %d, %s\n", param, (char *)value);
     if(param >= Scr_GetNumParam())
         return 0;
 
@@ -326,7 +328,7 @@ int stackGetParamString(int param, char **value)
         return 0;
 
     *value = SL_ConvertToString(var->u.stringValue);
-    printf("######## stackGetParamString: after SL_ConvertToString\n");
+    //printf("######## stackGetParamString: after SL_ConvertToString\n");
 
     return 1;
 }
@@ -446,12 +448,21 @@ void gsc_testmethod(scr_entref_t ref)
 
     Scr_AddString(ip);
     
-    //playerState_t *ps = SV_GameClientNum(id);
+    playerState_t *ps = SV_GameClientNum(id);
     //gentity_t *gentity = &g_entities[id];
-    //weaponinfo_t *weapon = BG_GetInfoForWeapon(ps->weapon);
-
-
+    weaponinfo_t *weapon = BG_GetInfoForWeapon(ps->weapon);
     
+    printf("###### ps->clientNum = %i\n", ps->clientNum);
+    //printf("###### ps->bobCycle = %i\n", ps->bobCycle);
+    printf("###### ps->pm_type = %i\n", ps->pm_type);
+    //printf("###### ps->pm_flags = %i\n", ps->pm_flags);
+    printf("###### ps->gravity = %i\n", ps->gravity);
+    printf("###### ps->speed = %i\n", ps->speed);
+    printf("###### ps->weapon = %i\n", ps->weapon);
+    printf("###### weapon->name = %s\n", weapon->name);
+    printf("###### weapon->displayName = %s\n", weapon->displayName);
+    printf("###### weapon->damage = %i\n", weapon->damage);
+    printf("###### weapon->number = %i\n", weapon->number);
 
     /*printf("###### ps->weapon = %i\n", ps->weapon);
     printf("###### weapon->maxAmmo = %i\n", weapon->maxAmmo);*/

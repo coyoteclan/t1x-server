@@ -7,12 +7,27 @@ struct WebhookData
     std::string message;
 };
 
+std::string escapeJson(const std::string &s) {
+    std::string escaped;
+    for (auto c : s) {
+        switch (c) {
+            case '\\': escaped += "\\\\"; break;
+            case '"':  escaped += "\\\""; break;
+            case '\n': escaped += "\\n"; break;
+            case '\r': escaped += "\\r"; break;
+            case '\t': escaped += "\\t"; break;
+            default: escaped += c; break;
+        }
+    }
+    return escaped;
+}
+
 void async_webhook_message(std::shared_ptr<WebhookData> data)
 {
     CURL *curl;
     CURLcode responseCode;
     struct curl_slist *headers = NULL;
-    std::string payload = "{\"content\":\"" + data->message + "\"}";
+    std::string payload = "{\"content\":\"" + escapeJson(data->message) + "\"}";
 
     curl_global_init(CURL_GLOBAL_ALL);
     curl = curl_easy_init();

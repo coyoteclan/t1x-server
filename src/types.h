@@ -483,16 +483,16 @@ typedef enum
     PM_DEAD_LINKED = 0x7,
 } pmtype_t;
 
-typedef struct playerState_s
+/*typedef struct playerState_s
 {
-    //int commandTime;
-    //pmtype_t pm_type;
-    //int bobCycle;
-    char gap1[12];
+    int commandTime;
+    pmtype_t pm_type;
+    int bobCycle;
     int pm_flags;
+    //char gap1[16];
     int pm_time;
-    vec3_t origin;
-    vec3_t velocity;
+    //vec3_t origin;
+    //vec3_t velocity;
     //int weaponTime;         // 0x2c
     //int weaponDelay;        // 0x30
     //int grenadeTimeLeft;    // 0x34
@@ -503,10 +503,34 @@ typedef struct playerState_s
     //vec3_t delta_angles;    // [0] = 0x48, [1] = 0x4C, [2] = 0x50 // 40
     //int groundEntityNum;    // 0x54 // 44
     //vec3_t vLadderVec;      // [0] = 0x58, [1] = 0x5C, [2] = 0x60 // 56
-    char gap2[56];
-    int jumpTime;
-    float jumpOriginZ;
+    //char gap2[56];
+    //int jumpTime;
+    //float jumpOriginZ;
+    //char gap2[188];
+    char gap[192];
+    unsigned int weapon; // 0xd8
     //...
+} playerState_t; //*/
+
+typedef struct playerState_s
+{
+    int commandTime; //0x0000
+	pmtype_t pm_type; //0x0004
+    int bobCycle;
+    int pm_flags;// not sure about these two
+    int pm_time;
+    //char pad_0008[12]; //0x0008//*/
+	vec3_t origin; //0x0014
+	vec3_t velocity; //0x0020
+	char pad_002C[8]; //0x002C
+	int grenadeTimeLeft; //0x0034
+	char pad_0038[12-4]; //0x0038
+    int gravity;
+	float leanf; //0x0044
+    int speed;
+	char pad_0048[140-4]; //0x0048
+	int clientNum; //0x00D4
+	int weapon; //0x00D8
 } playerState_t;
 
 struct pmove_t
@@ -517,89 +541,89 @@ struct pmove_t
 
 struct gclient_s
 {
-    int32_t commandTime; //0x0000
-	int32_t pm_type; //0x0004
+    int commandTime; //0x0000
+	int pm_type; //0x0004
 	char pad_0008[12]; //0x0008
 	vec3_t origin; //0x0014
 	vec3_t velocity; //0x0020
 	char pad_002C[8]; //0x002C
-	int32_t grenadeTimeLeft; //0x0034
+	int grenadeTimeLeft; //0x0034
 	char pad_0038[12]; //0x0038
 	float leanf; //0x0044
 	char pad_0048[140]; //0x0048
-	int32_t clientNum; //0x00D4
-	int32_t weapon; //0x00D8
+	int clientNum; //0x00D4
+	int weapon; //0x00D8
 	char pad_00DC[4]; //0x00DC
 	float aimProgress; //0x00E0
 	char pad_00E4[4]; //0x00E4
 	vec3_t viewangles; //0x00E8
-	int32_t viewheight_i; //0x00F4
+	int viewheight_i; //0x00F4
 	float viewheight_f; //0x00F8
 	char pad_00FC[4]; //0x00FC
-	int32_t viewheight_i_2; //0x0100
-	int32_t stance_change_dir; //0x0104
+	int viewheight_i_2; //0x0100
+	int stance_change_dir; //0x0104
 	char pad_0108[28]; //0x0108
-	int32_t maxhealth; //0x0124
+	int maxhealth; //0x0124
 	char pad_0128[1076]; //0x0128
 	vec3_t mins; //0x055C
 	vec3_t maxs; //0x0568
-	int32_t viewheight_prone; //0x0574
-	int32_t viewheight_crouched; //0x0578
-	int32_t viewheight_standing; //0x057C
+	int viewheight_prone; //0x0574
+	int viewheight_crouched; //0x0578
+	int viewheight_standing; //0x057C
 	char pad_0580[48]; //0x0580
 	float stamina; //0x05B0
 	char pad_05B4[16448]; //0x05B4
 	char name[32]; //0x45F4
 	char pad_4614[8]; //0x4614
-	int32_t noclip; //0x461C
+	int noclip; //0x461C
 	char pad_4620[8]; //0x4620
-	int32_t lastCmdTime; //0x4628
-	int32_t buttons; //0x462C
-	int32_t oldbuttons; //0x4630
+	int lastCmdTime; //0x4628
+	int buttons; //0x462C
+	int oldbuttons; //0x4630
 	char pad_4634[28]; //0x4634
 	vec3_t viewangles2; //0x4650
 	char pad_465C[28]; //0x465C
-	int32_t inactivityTime; //0x4678
+	int inactivityTime; //0x4678
 	char pad_467C[4]; //0x467C
-	int32_t inactivityWarning; //0x4680
+	int inactivityWarning; //0x4680
 	char pad_4684[496]; //0x4684
 };
 
 struct gentity_s
 {
-    int32_t number; //0x0000
+    int number; //0x0000
 	entityType_t eType; //0x0004
 	char pad_0008[4]; //0x0008
 	trajectory_t pos; //0x000C
 	char pad_0030[12]; //0x0030
 	vec3_t viewangles; //0x003C
 	char pad_0048[132]; //0x0048
-	int32_t weapon; //0x00CC
+	int weapon; //0x00CC
 	char pad_00D0[40]; //0x00D0
-	int32_t svFlags; //0x00F8
+	int svFlags; //0x00F8
 	char pad_00FC[64]; //0x00FC
 	vec3_t currentOrigin; //0x013C
 	char pad_0148[12]; //0x0148
-	int32_t ownerNum; //0x0154
-	int32_t r_eventTime; //0x0158
+	int ownerNum; //0x0154
+	int r_eventTime; //0x0158
 	char pad_015C[4]; //0x015C
 	struct gclient_s *client; //0x0160
 	char pad_0164[8]; //0x0164
-	int32_t inuse; //0x016C
+	int inuse; //0x016C
 	char pad_0170[20]; //0x0170
-	int32_t classname; //0x0184
-	int32_t spawnflags; //0x0188
-	int32_t flags; //0x018C
-	int32_t eventTime; //0x0190
-	int32_t freeAfterEvent; //0x0194
+	int classname; //0x0184
+	int spawnflags; //0x0188
+	int flags; //0x018C
+	int eventTime; //0x0190
+	int freeAfterEvent; //0x0194
 	char pad_0198[8]; //0x0198
-	int32_t clipmask; //0x01A0
+	int clipmask; //0x01A0
 	uint32_t frames; //0x01A4
 	struct gentity_s *parent; //0x01A8
 	char pad_01AC[58]; //0x01AC
 	int16_t targetname; //0x01E6
 	char pad_01E8[36]; //0x01E8
-	int32_t nextthink; //0x020C
+	int nextthink; //0x020C
 	void (*think)(gentity_t* self);
 	void (*reached)(gentity_t* self);
 	void (*blocked)(gentity_t* self, gentity_t* other);
@@ -608,14 +632,14 @@ struct gentity_s
 	void (*pain)(gentity_t* self, gentity_t* attacker, int damage, vec3_t point);
 	void (*die)(gentity_t* self, gentity_t* inflictor, gentity_t* attacker, int damage, int mod);
 	char pad_022C[20]; //0x022C
-	int32_t health; //0x0240
+	int health; //0x0240
 	char pad_0244[4]; //0x0244
-	int32_t damage; //0x0248
-	int32_t explosionInnerDamage; //0x024C
-	int32_t explosionOuterDamage; //0x0250
-	int32_t explosionRadius; //0x0254
-	int32_t methodOfDeath; //0x0258
-	int32_t splashMethodOfDeath; //0x025C
+	int damage; //0x0248
+	int explosionInnerDamage; //0x024C
+	int explosionOuterDamage; //0x0250
+	int explosionRadius; //0x0254
+	int methodOfDeath; //0x0258
+	int splashMethodOfDeath; //0x025C
 	char pad_0260[236]; //0x0260
 };
 
@@ -764,7 +788,7 @@ typedef struct
 } challenge_t;//*/
 
 // Basic union: 5 x 32 bits = 20 bytes
-typedef union netadr_u {
+/*typedef union netadr_u {
     struct {
         // 20 bytes in total
         uint32_t field1;
@@ -827,6 +851,92 @@ typedef enum
     EXEC_INSERT,
     EXEC_APPEND
 } cbufExec_t;
+
+typedef struct weaponinfo_t
+{
+    int number; //0x0000
+	char *name; //0x0004
+	char *displayName; //0x0008
+	char *AIOverlayDescription; //0x000C
+	char *gunModel; //0x0010
+	char *handModel; //0x0014
+	char pad_0018[4]; //0x0018
+	char *idleAnim; //0x001C
+	char *emptyIdleAnim; //0x0020
+	char *fireAnim; //0x0024
+	char *holdFireAnim; //0x0028
+	char *lastShotAnim; //0x002C
+	char pad_0030[4]; //0x0030
+	char *meleeAnim; //0x0034
+	char *reloadAnim; //0x0038
+	char *reloadEmptyAnim; //0x003C
+	char pad_0040[8]; //0x0040
+	char *raiseAnim; //0x0048
+	char *dropAnim; //0x004C
+	char *altRaiseAnim; //0x0050
+	char *altDropAnim; //0x0054
+	char *adsFireAnim; //0x0058
+	char *adsLastShotAnim; //0x005C
+	char pad_0060[16]; //0x0060
+	char *adsUpAnim; //0x0070
+	char *adsDownAnim; //0x0074
+	char *modeName; //0x0078
+	char pad_007C[24]; //0x007C
+	char *viewFlashEffect; //0x0094
+	char *worldFlashEffect; //0x0098
+	char *pickupSound; //0x009C
+	char pad_00A0[8]; //0x00A0
+	char *pullbackSound; //0x00A8
+	char *fireSound; //0x00AC
+	char pad_00B0[20]; //0x00B0
+	char *reloadSound; //0x00C4
+	char *reloadEmptySound; //0x00C8
+	char pad_00CC[12]; //0x00CC
+	char *altSwitchSound; //0x00D8
+	char pad_00DC[36]; //0x00DC
+	char *shellEjectEffect; //0x0100
+	char pad_0104[4]; //0x0104
+	char *reticle; //0x0108
+	char *reticleSide; //0x010C
+	char pad_0110[180]; //0x0110
+	char *radiantName; //0x01C4
+	char *worldModel; //0x01C8
+	char pad_01CC[8]; //0x01CC
+	char *hudIcon; //0x01D4
+	char *modeIcon; //0x01D8
+	char *ammoIcon; //0x01DC
+	int startAmmo; //0x01E0
+	char pad_01E4[12]; //0x01E4
+	int clientIndex; //0x01F0
+	int maxAmmo; //0x01F4
+	int clipSize; //0x01F8
+	char *sharedAmmoCapName; //0x01FC
+	char pad_0200[8]; //0x0200
+	int damage; //0x0208
+	char pad_020C[8]; //0x020C
+	int damageInnerRadius; //0x0214
+	int damageOuterRadius; //0x0218
+	char pad_021C[76]; //0x021C
+	int fuseTime; //0x0268
+	char pad_026C[228]; //0x026C
+	char *killIcon; //0x0350
+	char pad_0354[20]; //0x0354
+	char *altWeapon; //0x0368
+	char pad_036C[12]; //0x036C
+	int explosionRadius; //0x0378
+	int explosionInnerDamage; //0x037C
+	int explosionOuterDamage; //0x0380
+	char pad_0384[8]; //0x0384
+	char* projectileModel; //0x038C
+    //...
+} weaponinfo_t;
+
+typedef struct weaponslot_s
+{
+    weaponinfo_t *weapondef;
+	int clip;
+	int reserve;
+} weaponslot_t;
 
 typedef struct
 {

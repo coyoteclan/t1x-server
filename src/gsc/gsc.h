@@ -44,6 +44,10 @@ void gsc_player_connectionlesspackettoclient(scr_entref_t ref);
 ////
 
 //// Weapons
+void gsc_weapons_getweaponstrproperty();
+void gsc_weapons_setweaponstrproperty();
+void gsc_weapons_getweaponintproperty();
+void gsc_weapons_setweaponintproperty();
 
 ////
 
