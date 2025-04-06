@@ -240,7 +240,6 @@ void gsc_weapons_setweaponintproperty()
     else if(strcmp(property, "damage") == 0)
     {
         weapon->damage = value;
-        printf("[DEBUG] set weapon->damage = %i\n", value);
     }
     else if(strcmp(property, "damageInnerRadius") == 0)
     {

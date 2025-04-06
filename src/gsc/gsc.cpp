@@ -463,6 +463,15 @@ void gsc_testmethod(scr_entref_t ref)
     printf("###### weapon->displayName = %s\n", weapon->displayName);
     printf("###### weapon->damage = %i\n", weapon->damage);
     printf("###### weapon->number = %i\n", weapon->number);
+    printf("###### weapon->adsZoomFov = %f\n", weapon->adsZoomFov);
+    printf("###### weapon->adsZoomInFrac = %f\n", weapon->adsZoomInFrac);
+    printf("###### weapon->adsZoomOutFrac = %f\n", weapon->adsZoomOutFrac);
+    printf("###### weapon->killIcon = %s\n", weapon->killIcon);
+    printf("###### weapon->adsSensitivity = %f\n", weapon->adsSensitivity);
+    //printf("###### weapon->something = %s\n", weapon->something);
+
+    weapon->moveSpeedScale = 2.0f;
+    //weapon->adsZoomFov = 50.0f; // experiment
 
     /*printf("###### ps->weapon = %i\n", ps->weapon);
     printf("###### weapon->maxAmmo = %i\n", weapon->maxAmmo);*/

@@ -93,7 +93,10 @@ static const Com_ParseInt_t Com_ParseInt = (Com_ParseInt_t)0x080860ad;
 //// Cvar
 typedef cvar_t* (*Cvar_Set_t)(const char *var_name, const char *value);
 // Cvar_Set
-static const Cvar_Set_t Cvar_Set = (Cvar_Set_t)0x8073440;
+static const Cvar_Set_t Cvar_Set = (Cvar_Set_t)0x8073798;
+
+typedef cvar_t * (*Cvar_Set2_t)(const char *var_name, const char *value, qboolean force);
+static const Cvar_Set2_t Cvar_Set2 = (Cvar_Set2_t)0x08073440;
 
 typedef cvar_t* (*Cvar_Get_t)(const char *var_name, const char *var_value, unsigned short flags);
 // If the variable already exists, the value will not be set unless CVAR_ROM. The flags will be or'ed in if the variable exists.

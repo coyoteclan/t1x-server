@@ -918,7 +918,16 @@ typedef struct weaponinfo_t
 	int damageOuterRadius; //0x0218
 	char pad_021C[76]; //0x021C
 	int fuseTime; //0x0268
-	char pad_026C[228]; //0x026C
+    float moveSpeedScale; // 0x026c
+    float adsSensitivity; // 0x0270
+    float adsZoomFov; // 0x0274 <-----|
+    float adsZoomInFrac; // 0x0278 <--|--- just guessed these and they seem to work
+    float adsZoomOutFrac; // 0x027c <-|
+    char *adsOverlayShader; // 0x0280
+    char gap_0280[4]; // not sure if this is adsOverlayReticle
+    float adsOverlayWidth;
+    float adsOverlayHeight;
+	char pad_026C[192]; //0x0280
 	char *killIcon; //0x0350
 	char pad_0354[20]; //0x0354
 	char *altWeapon; //0x0368
@@ -928,7 +937,7 @@ typedef struct weaponinfo_t
 	int explosionOuterDamage; //0x0380
 	char pad_0384[8]; //0x0384
 	char* projectileModel; //0x038C
-    //...
+    //...      
 } weaponinfo_t;
 
 typedef struct weaponslot_s
@@ -937,6 +946,18 @@ typedef struct weaponslot_s
 	int clip;
 	int reserve;
 } weaponslot_t;
+
+struct WeaponProperties // Custom struct for g_legacyStyle
+{
+    int reloadAddTime;
+    int adsTransInTime;
+    float adsZoomInFrac;
+    float idleCrouchFactor;
+    float idleProneFactor;
+    int rechamberWhileAds;
+    float adsViewErrorMin;
+    float adsViewErrorMax;
+};
 
 typedef struct
 {

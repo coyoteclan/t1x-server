@@ -9,6 +9,7 @@ cvar_t *sv_maxclients;
 cvar_t *fs_callbacks;
 cvar_t *fs_callbacks_additional;
 cvar_t *g_debugCallbacks;
+cvar_t* g_legacyStyle;
 cvar_t *jump_slowdownEnable;
 cvar_t *sv_cracked;
 cvar_t *sv_connectMessage;
@@ -112,6 +113,7 @@ cHook *hook_GScr_LoadGameTypeScript;
 cHook *hook_SV_AddOperatorCommands;
 cHook *hook_SV_SpawnServer;
 cHook *hook_Sys_LoadDll;
+cHook* hook_cvar_set2;
 //cHook *hook_SV_Startup;
 
 /*void hook_GetConfigstringConst(int index)
@@ -156,6 +158,111 @@ void sendMessageToClient_orServerConsole(client_t *cl, std::string message)
     }
 }
 
+std::map<std::string, std::map<std::string, WeaponProperties>> weapons_properties;
+
+/*void toggleLegacyStyle(bool enable)
+{
+    if(enable)
+        Cvar_Set2("jump_slowdownEnable", "0", qfalse);
+    else
+        Cvar_Set2("jump_slowdownEnable", "1", qfalse);
+
+    int id_kar98k_sniper = BG_GetWeaponIndexForName("kar98k_sniper_mp");
+    weaponinfo_t* weapon_kar98k_sniper = BG_GetInfoForWeapon(id_kar98k_sniper);
+    int id_springfield = BG_GetWeaponIndexForName("springfield_mp");
+    weaponinfo_t* weapon_springfield = BG_GetInfoForWeapon(id_springfield);
+    int id_mosin_nagant_sniper = BG_GetWeaponIndexForName("mosin_nagant_sniper_mp");
+    weaponinfo_t* weapon_mosin_nagant_sniper = BG_GetInfoForWeapon(id_mosin_nagant_sniper);
+
+    if (weapon_kar98k_sniper)
+    {
+        const WeaponProperties* properties_kar98k_sniper = nullptr;
+        if(enable)
+            properties_kar98k_sniper = &weapons_properties[weapon_kar98k_sniper->name]["legacy"];
+        else
+            properties_kar98k_sniper = &weapons_properties[weapon_kar98k_sniper->name]["default"];
+        weapon_kar98k_sniper->adsTransInTime = properties_kar98k_sniper->adsTransInTime;
+        weapon_kar98k_sniper->OOPosAnimLength[0] = 1.0 / (float)weapon_kar98k_sniper->adsTransInTime;
+        weapon_kar98k_sniper->adsZoomInFrac = properties_kar98k_sniper->adsZoomInFrac;
+        weapon_kar98k_sniper->idleCrouchFactor = properties_kar98k_sniper->idleCrouchFactor;
+        weapon_kar98k_sniper->idleProneFactor = properties_kar98k_sniper->idleProneFactor;
+        weapon_kar98k_sniper->rechamberWhileAds = properties_kar98k_sniper->rechamberWhileAds;
+        weapon_kar98k_sniper->adsViewErrorMin = properties_kar98k_sniper->adsViewErrorMin;
+        weapon_kar98k_sniper->adsViewErrorMax = properties_kar98k_sniper->adsViewErrorMax;
+    }
+
+    if (weapon_mosin_nagant_sniper)
+    {
+        const WeaponProperties* properties_mosin_nagant_sniper = nullptr;
+        if(enable)
+            properties_mosin_nagant_sniper = &weapons_properties[weapon_mosin_nagant_sniper->name]["legacy"];
+        else
+            properties_mosin_nagant_sniper = &weapons_properties[weapon_mosin_nagant_sniper->name]["default"];
+        weapon_mosin_nagant_sniper->reloadAddTime = properties_mosin_nagant_sniper->reloadAddTime;
+        weapon_mosin_nagant_sniper->adsTransInTime = properties_mosin_nagant_sniper->adsTransInTime;
+        weapon_mosin_nagant_sniper->OOPosAnimLength[0] = 1.0 / (float)weapon_mosin_nagant_sniper->adsTransInTime;
+        weapon_mosin_nagant_sniper->adsZoomInFrac = properties_mosin_nagant_sniper->adsZoomInFrac;
+        weapon_mosin_nagant_sniper->idleCrouchFactor = properties_mosin_nagant_sniper->idleCrouchFactor;
+        weapon_mosin_nagant_sniper->idleProneFactor = properties_mosin_nagant_sniper->idleProneFactor;
+        weapon_mosin_nagant_sniper->rechamberWhileAds = properties_mosin_nagant_sniper->rechamberWhileAds;
+        weapon_mosin_nagant_sniper->adsViewErrorMin = properties_mosin_nagant_sniper->adsViewErrorMin;
+        weapon_mosin_nagant_sniper->adsViewErrorMax = properties_mosin_nagant_sniper->adsViewErrorMax;
+    }
+
+    if (weapon_springfield)
+    {
+        const WeaponProperties* properties_springfield = nullptr;
+        if(enable)
+            properties_springfield = &weapons_properties[weapon_springfield->name]["legacy"];
+        else
+            properties_springfield = &weapons_properties[weapon_springfield->name]["default"];
+        weapon_springfield->adsTransInTime = properties_springfield->adsTransInTime;
+        weapon_springfield->OOPosAnimLength[0] = 1.0 / (float)weapon_springfield->adsTransInTime;
+        weapon_springfield->adsZoomInFrac = properties_springfield->adsZoomInFrac;
+        weapon_springfield->idleCrouchFactor = properties_springfield->idleCrouchFactor;
+        weapon_springfield->idleProneFactor = properties_springfield->idleProneFactor;
+        weapon_springfield->rechamberWhileAds = properties_springfield->rechamberWhileAds;
+        weapon_springfield->adsViewErrorMin = properties_springfield->adsViewErrorMin;
+        weapon_springfield->adsViewErrorMax = properties_springfield->adsViewErrorMax;
+    }
+}//*/
+
+void custom_Cvar_Set2(const char *var_name, const char *value, qboolean force)
+{
+    bool check_g_legacyStyle = false;
+    bool g_legacyStyle_before;
+    bool g_legacyStyle_after;
+    printf("##### custom_Cvar_Set2 called: var_name: %s, value: %s\n", var_name, value);
+
+    if(com_sv_running != NULL && com_sv_running->integer)
+    {
+        if(!strcasecmp(var_name, g_legacyStyle->name))
+        {
+            check_g_legacyStyle = true;
+            g_legacyStyle_before = g_legacyStyle->integer ? true : false;
+        }
+    }
+    
+    hook_cvar_set2->unhook();
+    cvar_t* (*Cvar_Set2)(const char *var_name, const char *value, qboolean force);
+    *(int *)&Cvar_Set2 = hook_cvar_set2->from;
+
+    if(check_g_legacyStyle)
+    {
+        cvar_t* var = Cvar_Set2(var_name, value, force);
+        if(var)
+        {
+            g_legacyStyle_after = var->integer ? true : false;
+            if(g_legacyStyle_before != g_legacyStyle_after)
+                printf("check_g_legacyStyle\n");//toggleLegacyStyle(var->integer);
+        }
+    }
+    else
+        Cvar_Set2(var_name, value, force);
+
+    hook_cvar_set2->hook();
+}
+
 void custom_Com_Init(char *commandLine)
 {
     hook_Com_Init->unhook();
@@ -176,6 +283,7 @@ void custom_Com_Init(char *commandLine)
     fs_callbacks = Cvar_Get("fs_callbacks", "maps/mp/gametypes/_callbacksetup", CVAR_ARCHIVE);
     fs_callbacks_additional = Cvar_Get("fs_callbacks_additional", "", CVAR_ARCHIVE);
     g_debugCallbacks = Cvar_Get("g_debugCallbacks", "0", CVAR_ARCHIVE);
+    g_legacyStyle = Cvar_Get("g_legacyStyle", "1", CVAR_SYSTEMINFO | CVAR_ARCHIVE);
     jump_slowdownEnable = Cvar_Get("jump_slowdownEnable", "0", CVAR_SYSTEMINFO | CVAR_ARCHIVE);
     sv_cracked = Cvar_Get("sv_cracked", "0", CVAR_ARCHIVE);
     sv_connectMessage = Cvar_Get("sv_connectMessage", "Server is running t1x server extension.", CVAR_ARCHIVE);
@@ -1515,6 +1623,8 @@ class t1x
         hook_SV_SpawnServer->hook();
         hook_SV_AddOperatorCommands = new cHook(0x08089580, (int)custom_SV_AddOperatorCommands);
         hook_SV_AddOperatorCommands->hook();
+        hook_cvar_set2 = new cHook(0x08072da8, (int)custom_Cvar_Set2);
+        hook_cvar_set2->hook();
         //hook_SV_Startup = new cHook(0x08091473, (int)custom_SV_Startup);
         //hook_SV_Startup->hook();
 
