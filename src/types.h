@@ -906,17 +906,44 @@ typedef struct weaponinfo_t
 	char *modeIcon; //0x01D8
 	char *ammoIcon; //0x01DC
 	int startAmmo; //0x01E0
-	char pad_01E4[12]; //0x01E4
-	int clientIndex; //0x01F0
+    char *ammoName;
+    int ammoOrClipIndex; // not sure
+    char *clipName;
+	//char pad_01E4[12-8]; //0x01E4
+	int clientIndex; //0x01F0 // could this be clipIndex?
 	int maxAmmo; //0x01F4
 	int clipSize; //0x01F8
 	char *sharedAmmoCapName; //0x01FC
-	char pad_0200[8]; //0x0200
+    char pad_0200[8]; //0x0200
 	int damage; //0x0208
-	char pad_020C[8]; //0x020C
+    //int something; not sure what this is, 0 for both rifle and rgd-33russianfrag
+    char gap_005[4];
+    int minDamagePercent;
+	//char pad_020C[8]; //0x020C
 	int damageInnerRadius; //0x0214
 	int damageOuterRadius; //0x0218
-	char pad_021C[76]; //0x021C
+    /*int something;
+    int something2;
+    int fireDelay;
+    int meleeDelay;
+    int fireTime;
+    int rechamberTime;
+    int something7;
+    int something8;
+    int meleeTime;
+    int reloadTime;
+    int reloadEmptyTime;//*/// // these fields are not double checked
+    char gap_006[44];
+    int reloadAddTime;
+    char gap_007[28];
+    /*int reloadStartTime; // these fields are not double checked
+    int reloadStartAddTime;
+    int reloadEndTime;
+    int dropTime;
+    int raiseTime;
+    int altDropTime;
+    int altRaiseTime;//*/
+	//char pad_021C[76]; //0x021C
 	int fuseTime; //0x0268
     float moveSpeedScale; // 0x026c
     float adsSensitivity; // 0x0270
@@ -927,7 +954,57 @@ typedef struct weaponinfo_t
     char gap_0280[4]; // not sure if this is adsOverlayReticle
     float adsOverlayWidth;
     float adsOverlayHeight;
-	char pad_026C[192]; //0x0280
+    float adsBobFactor;
+    float adsViewBobMult;
+    float hipSpreadStandMin;
+    float hipSpreadDuckedMin;
+    float hipSpreadProneMin;
+    float hipSpreadMax;
+    float hipSpreadDecayRate;
+    float hipSpreadFireAdd;
+    float hipSpreadTurnAdd;
+    float hipSpreadMoveAdd;
+    float hipSpreadDuckedDecay;
+    float hipSpreadProneDecay;
+    float hipReticleSidePos;
+    int adsTransInTime;
+    int adsTransOutTime;
+    float adsIdleAmount;
+    float hipIdleAmount;
+    float idleCrouchFactor;
+    float idleProneFactor;
+    float gunMaxPitch;
+    float gunMaxYaw;
+    float swayMaxAngle;
+    float swayLerpSpeed;
+    float swayPitchScale;
+    float swayYawScale;
+    float swayHorizScale;
+    float swayVertScale;
+    float swayShellShockScale;
+    float adsSwayMaxAngle;
+    float adsSwayLerpSpeed;
+    float adsSwayPitchScale;
+    float adsSwayYawScale;
+    float adsSwayHorizScale;
+    float adsSwayVertScale;
+    int twoHanded;
+    int rifleBullet;
+    int semiAuto;
+    int boltAction;
+    int aimDownSight;
+    int rechamberWhileAds;
+    float adsViewErrorMin;
+    float adsViewErrorMax;
+    //float something;
+    //float something2;
+    //float something3;
+    char gap_002[12];
+    int wideListIcon;
+    //float something5;
+	//float something6;
+    // Don't know what something-something6 are but they are 0 (both as int & float) for scoped kar98k
+    char gap_003[8];
 	char *killIcon; //0x0350
 	char pad_0354[20]; //0x0354
 	char *altWeapon; //0x0368
@@ -937,6 +1014,8 @@ typedef struct weaponinfo_t
 	int explosionOuterDamage; //0x0380
 	char pad_0384[8]; //0x0384
 	char* projectileModel; //0x038C
+    char gap_004[292];
+    float OOPosAnimLength[2]; // 0x4b4
     //...      
 } weaponinfo_t;
 

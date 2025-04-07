@@ -160,7 +160,7 @@ void sendMessageToClient_orServerConsole(client_t *cl, std::string message)
 
 std::map<std::string, std::map<std::string, WeaponProperties>> weapons_properties;
 
-/*void toggleLegacyStyle(bool enable)
+void toggleLegacyStyle(bool enable)
 {
     if(enable)
         Cvar_Set2("jump_slowdownEnable", "0", qfalse);
@@ -232,7 +232,7 @@ void custom_Cvar_Set2(const char *var_name, const char *value, qboolean force)
     bool check_g_legacyStyle = false;
     bool g_legacyStyle_before;
     bool g_legacyStyle_after;
-    printf("##### custom_Cvar_Set2 called: var_name: %s, value: %s\n", var_name, value);
+    //printf("##### custom_Cvar_Set2 called: var_name: %s, value: %s\n", var_name, value);
 
     if(com_sv_running != NULL && com_sv_running->integer)
     {
@@ -254,7 +254,7 @@ void custom_Cvar_Set2(const char *var_name, const char *value, qboolean force)
         {
             g_legacyStyle_after = var->integer ? true : false;
             if(g_legacyStyle_before != g_legacyStyle_after)
-                printf("check_g_legacyStyle\n");//toggleLegacyStyle(var->integer);
+                toggleLegacyStyle(var->integer);//printf("check_g_legacyStyle\n");//
         }
     }
     else
@@ -389,6 +389,25 @@ void custom_SV_SpawnServer(char *server)
     *(int*)&SV_SpawnServer = hook_SV_SpawnServer->from;
     SV_SpawnServer(server);
     hook_SV_SpawnServer->hook();
+
+    if(weapons_properties.empty())
+    {
+        weapons_properties["kar98k_sniper_mp"]["default"] = { 199, 449, 0.1, 0.6, 0.2, 0, 1.2, 1.4 };
+        weapons_properties["kar98k_sniper_mp"]["legacy"] = { 199, 299, 0.42, 0.2, 0.085, 1, 0, 0 };
+
+        weapons_properties["mosin_nagant_sniper_mp"]["default"] = { 1339, 449, 0.1, 0.6, 0.2, 0, 1.2, 1.4 };
+        weapons_properties["mosin_nagant_sniper_mp"]["legacy"] = { 339, 299, 0.42, 0.2, 0.085, 1, 0, 0 };
+
+        weapons_properties["springfield_mp"]["default"] = { 199, 449, 0.1, 0.6, 0.2, 0, 1.2, 1.4 };
+        weapons_properties["springfield_mp"]["legacy"] = { 199, 299, 0.5, 0.2, 0.085, 1, 0, 0 };
+        /*
+        springfield_mp adsZoomInFrac in 1.1 patch weapon file = 0.05.
+        There must be an error somewhere. Now replacing by 0.5 to fix slowness.
+        */
+    }
+
+    if(g_legacyStyle->integer)
+        toggleLegacyStyle(true);//*/
 }
 
 void custom_SV_AddOperatorCommands()
@@ -1623,7 +1642,7 @@ class t1x
         hook_SV_SpawnServer->hook();
         hook_SV_AddOperatorCommands = new cHook(0x08089580, (int)custom_SV_AddOperatorCommands);
         hook_SV_AddOperatorCommands->hook();
-        hook_cvar_set2 = new cHook(0x08072da8, (int)custom_Cvar_Set2);
+        hook_cvar_set2 = new cHook(0x08073440, (int)custom_Cvar_Set2);
         hook_cvar_set2->hook();
         //hook_SV_Startup = new cHook(0x08091473, (int)custom_SV_Startup);
         //hook_SV_Startup->hook();
